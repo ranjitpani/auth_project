@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 import random
 from django.conf import settings
+from .forms import ProfileForm
 
 User = get_user_model()
 
@@ -185,4 +186,191 @@ def location(request):
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html')
+    user = request.user
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = ProfileForm(instance=user)
+    return render(request, 'profile.html', {'form': form})
+
+from .models import Store
+
+# accounts/views.py
+from .models import Store
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Store, Product
+import random
+
+@login_required
+def home(request):
+    user = request.user
+
+    # Filter stores based on user location
+    stores = Store.objects.filter(
+        country=user.country,
+        state=user.state,
+        district=user.district,
+        block=user.block
+    )
+
+    # Get all products and shuffle them randomly
+    products = list(Product.objects.all())
+    random.shuffle(products)
+
+    context = {
+        'stores': stores,
+        'products': products,  # pass products to template
+    }
+
+    return render(request, 'home.html', context)
+
+from django.http import HttpResponse
+from .models import State, District, Block
+
+def load_states(request):
+    country_id = request.GET.get('country')
+    states = State.objects.filter(country_id=country_id).order_by('name')
+    return HttpResponse('\n'.join([f'<option value="{s.id}">{s.name}</option>' for s in states]))
+
+def load_districts(request):
+    state_id = request.GET.get('state')
+    districts = District.objects.filter(state_id=state_id).order_by('name')
+    return HttpResponse('\n'.join([f'<option value="{d.id}">{d.name}</option>' for d in districts]))
+
+def load_blocks(request):
+    district_id = request.GET.get('district')
+    blocks = Block.objects.filter(district_id=district_id).order_by('name')
+    return HttpResponse('\n'.join([f'<option value="{b.id}">{b.name}</option>' for b in blocks]))
+from collections import defaultdict
+
+from collections import defaultdict
+
+def store_detail(request, id):
+    store = get_object_or_404(Store, id=id, is_active=True)
+    products = store.products.filter(is_available=True)
+    
+    # Group products by category name; if category is None, group as 'Uncategorized'
+    products_by_category = defaultdict(list)
+    for product in products:
+        category_name = product.category.name if product.category else 'Uncategorized'
+        products_by_category[category_name].append(product)
+    
+    context = {
+        'store': store,
+        'products_by_category': dict(products_by_category)
+    }
+    return render(request, 'store_detail.html', context)
+
+# from django.shortcuts import render, get_object_or_404
+# from django.db.models import Q
+# from .models import Product
+
+# def product_detail(request, id):
+#     product = get_object_or_404(Product, id=id)
+
+#     # 1️⃣ Same store + same category (first priority)
+#     similar_products = Product.objects.filter(
+#         store=product.store,
+#         category=product.category
+#     ).exclude(id=product.id)
+
+#     # 2️⃣ If not enough → same store random products
+#     if similar_products.count() < 4:
+#         same_store_random = Product.objects.filter(
+#             store=product.store
+#         ).exclude(id=product.id)
+
+#         similar_products = (similar_products | same_store_random).distinct()
+
+#     # 3️⃣ If still not enough → other store random products
+#     if similar_products.count() < 4:
+#         other_store_random = Product.objects.exclude(
+#             Q(store=product.store) | Q(id=product.id)
+#         ).order_by('?')[:4]
+
+#         similar_products = (similar_products | other_store_random).distinct()
+
+#     context = {
+#         "product": product,
+#         "similar_products": similar_products[:4]  # show only 4
+#     }
+
+#     return render(request, 'product_detail.html', context)
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
+from .models import Product
+import random
+
+def product_detail(request, id):
+    product = get_object_or_404(Product, id=id)
+
+    # Step 1: same store + same category
+    similar_products = list(Product.objects.filter(
+        store=product.store,
+        category=product.category
+    ).exclude(id=product.id))
+
+    # Step 2: if not enough, add same store random products
+    if len(similar_products) < 4:
+        same_store_random = list(Product.objects.filter(
+            store=product.store
+        ).exclude(id=product.id))
+        for p in same_store_random:
+            if p not in similar_products:
+                similar_products.append(p)
+
+    # Step 3: if still not enough, add other store random products
+    if len(similar_products) < 4:
+        other_store_random = list(Product.objects.exclude(
+            Q(store=product.store) | Q(id=product.id)
+        ))
+        for p in other_store_random:
+            if p not in similar_products:
+                similar_products.append(p)
+
+    # Step 4: shuffle and limit to 4
+    random.shuffle(similar_products)
+    similar_products = similar_products[:4]
+
+    context = {
+        "product": product,
+        "similar_products": similar_products
+    }
+    return render(request, 'product_detail.html', context)
+
+# accounts/views.py
+from django.shortcuts import redirect, get_object_or_404
+from .models import Product, ProductStock
+
+def add_to_cart(request, product_id, size):
+    product = get_object_or_404(Product, id=product_id)
+    # Example: simple cart in session
+    cart = request.session.get('cart', {})
+    key = f"{product_id}_{size}"
+    if key in cart:
+        cart[key] += 1
+    else:
+        cart[key] = 1
+    request.session['cart'] = cart
+    request.session.modified = True
+    return redirect('cart')
+
+
+# accounts/views.py
+from django.shortcuts import redirect, get_object_or_404
+from .models import Product, ProductStock
+
+def buy_now(request, product_id, size):
+    # Example: redirect to cart page with single item
+    product = get_object_or_404(Product, id=product_id)
+    cart = request.session.get('cart', {})
+    key = f"{product_id}_{size}"
+    cart[key] = 1  # set quantity 1 for buy now
+    request.session['cart'] = cart
+    request.session.modified = True
+    return redirect('cart')  # or redirect to checkout page if exists

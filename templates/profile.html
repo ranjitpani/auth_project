@@ -8,6 +8,54 @@
     <p><strong>Name:</strong> {{ request.user.username }}</p>
     <p><strong>Email:</strong> {{ request.user.email }}</p>
 
+    <form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function(){
+    $("#id_country").change(function(){
+        var url = "{% url 'ajax_load_states' %}";
+        var countryId = $(this).val();
+        $.ajax({
+            url: url,
+            data: {'country': countryId},
+            success: function(data){
+                $("#id_state").html(data);
+                $("#id_district").html('<option value="">---------</option>');
+                $("#id_block").html('<option value="">---------</option>');
+            }
+        });
+    });
+    $("#id_state").change(function(){
+        var url = "{% url 'ajax_load_districts' %}";
+        var stateId = $(this).val();
+        $.ajax({
+            url: url,
+            data: {'state': stateId},
+            success: function(data){
+                $("#id_district").html(data);
+                $("#id_block").html('<option value="">---------</option>');
+            }
+        });
+    });
+    $("#id_district").change(function(){
+        var url = "{% url 'ajax_load_blocks' %}";
+        var districtId = $(this).val();
+        $.ajax({
+            url: url,
+            data: {'district': districtId},
+            success: function(data){
+                $("#id_block").html(data);
+            }
+        });
+    });
+});
+</script>
+
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button style="
@@ -23,4 +71,5 @@
         </button>
     </form>
 </div>
+
 {% endblock %}
