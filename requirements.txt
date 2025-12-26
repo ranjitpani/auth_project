@@ -3,3 +3,4 @@ Django==5.2.9
 python-dotenv==1.2.1
 sqlparse==0.5.5
 gunicorn==23.0.0
+Pillow
