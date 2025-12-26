@@ -28,7 +28,7 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['villagestore.onrender.com', 'localhost', '127.0.0.1']
 
@@ -134,8 +134,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER='paniranjit161@gmail.com'
-EMAIL_HOST_PASSWORD='kkyu sslz oukn mejd'
+
 
 # settings.py
 LOGIN_URL = '/login/'
