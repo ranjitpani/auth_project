@@ -1,11 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>{% block title %}Auth Project{% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Village Store{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 70px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            z-index: 1000;
+        }
+        .nav-item {
+            text-align: center;
+            color: #555;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .nav-item i {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .nav-item.active,
+        .nav-item:hover {
+            color: #0d6efd;
+        }
+        @media (min-width: 768px) {
+            .bottom-nav {
+                width: 400px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 15px 15px 0 0;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  {% block content %}{% endblock %}
+<body>
+
+{% block content %}{% endblock %}
+
+<!-- Bottom Navbar -->
+<div class="bottom-nav">
+
+    <a href="{% url 'home' %}" class="nav-item {% if request.path == '/' %}active{% endif %}">
+        <i class="fa fa-home"></i>
+        Home
+    </a>
+
+    <a href="/cart/" class="nav-item {% if 'cart' in request.path %}active{% endif %}">
+        <i class="fa fa-shopping-cart"></i>
+        Cart
+    </a>
+
+    <a href="/cart-history/" class="nav-item {% if 'history' in request.path %}active{% endif %}">
+        <i class="fa fa-clock"></i>
+        History
+    </a>
+
+    <a href="/location/" class="nav-item {% if 'location' in request.path %}active{% endif %}">
+        <i class="fa fa-location-dot"></i>
+        Location
+    </a>
+
+    {% if request.user.is_authenticated %}
+        <a href="/profile/" class="nav-item {% if 'profile' in request.path %}active{% endif %}">
+            <i class="fa fa-user"></i>
+            Profile
+        </a>
+    {% else %}
+        <a href="{% url 'login' %}" class="nav-item {% if 'login' in request.path %}active{% endif %}">
+            <i class="fa fa-user"></i>
+            Login
+        </a>
+    {% endif %}
+
+</div>
+
 </body>
 </html>

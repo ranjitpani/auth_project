@@ -1,40 +1,9 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Home{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <title>Home</title>
-</head>
-<body class="bg-gradient-to-r from-purple-200 to-pink-100 min-h-screen flex items-center justify-center">
-  <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md text-center animate-fadeIn">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Welcome to Our Site!</h1>
-
-    {% if user.is_authenticated %}
-      <p class="mb-6 text-gray-700">Hello, {{ user.email }}!</p>
-      <a href="{% url 'logout' %}" 
-         class="bg-red-500 text-white py-3 px-6 rounded-lg hover:bg-red-600 transition duration-300">
-        Logout
-      </a>
-    {% else %}
-      <a href="{% url 'signup' %}" 
-         class="block bg-blue-500 text-white py-3 px-6 rounded-lg mb-4 hover:bg-blue-600 transition duration-300">
-        Sign Up
-      </a>
-      <a href="{% url 'login' %}" 
-         class="block bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300">
-        Login
-      </a>
-    {% endif %}
-  </div>
-
-  <style>
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fadeIn { animation: fadeIn 0.8s ease-out forwards; }
-  </style>
-</body>
-</html>
+<div style="padding:15px;">
+    <h2>🏠 Welcome to Village Store</h2>
+    <p>Home page content here...</p>
+</div>
 {% endblock %}

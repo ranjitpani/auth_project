@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div style="padding:15px;">
+    <h2>👤 My Profile</h2>
+
+    <p><strong>Name:</strong> {{ request.user.username }}</p>
+    <p><strong>Email:</strong> {{ request.user.email }}</p>
+
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button style="
+            width:100%;
+            padding:12px;
+            background:#dc3545;
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+        ">
+            Logout
+        </button>
+    </form>
+</div>
+{% endblock %}
