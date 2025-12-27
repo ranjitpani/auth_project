@@ -6,7 +6,7 @@ from .views import (
     load_states, load_districts, load_blocks, store_detail,
     product_detail, add_to_cart, buy_now  # <-- new views
 )
-
+from accounts.views import create_superuser
 urlpatterns = [
     path('', home, name='home'),
     path('signup/', signup, name='signup'),
@@ -33,4 +33,5 @@ urlpatterns = [
     path('product/<int:id>/', product_detail, name='product_detail'),
     path('add-to-cart/<int:id>/', add_to_cart, name='add_to_cart'),
     path('buy-now/<int:id>/', buy_now, name='buy_now'),
+    path('create-superuser/', create_superuser),
 ]

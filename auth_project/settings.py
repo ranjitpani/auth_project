@@ -61,10 +61,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'auth_project.wsgi.application'
 
 # Database
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'authdb',
+        'USER': 'authuser',
+        'PASSWORD': 'authpass123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -97,7 +107,8 @@ import os
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
-DEFAULT_FROM_EMAIL = "Village Store <onboarding@resend.dev>"
+# DEFAULT_FROM_EMAIL = "Village Store <onboarding@resend.dev>"
+DEFAULT_FROM_EMAIL = "Village Store <onboarding@village-store.onrender.com>"
 # Login/Logout redirects
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'

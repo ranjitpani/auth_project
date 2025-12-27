@@ -367,3 +367,19 @@ def buy_now(request, product_id, size):
     request.session['cart'] = cart
     request.session.modified = True
     return redirect('cart')  # or redirect to checkout page if exists
+
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
+def create_superuser(request):
+    User = get_user_model()
+    email = "admin@gmail.com"
+    password = "Admin@123"
+    if User.objects.filter(email=email).exists():
+        user = User.objects.get(email=email)
+        user.set_password(password)
+        user.save()
+        return HttpResponse("Password updated for existing superuser.")
+    else:
+        User.objects.create_superuser(email=email, password=password)
+        return HttpResponse("Superuser created successfully.")
