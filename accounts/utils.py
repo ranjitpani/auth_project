@@ -1,14 +1,15 @@
-import random
-from django.core.mail import send_mail
+import resend
+from django.conf import settings
 
-def generate_otp():
-    return random.randint(100000, 999999)
+resend.api_key = settings.RESEND_API_KEY
 
 def send_otp_email(email, otp):
-    send_mail(
-        'Your OTP Code',
-        f'Your OTP is {otp}',
-        'noreply@authapp.com',
-        [email],
-        fail_silently=False,
-    )
+    resend.Emails.send({
+        "from": settings.DEFAULT_FROM_EMAIL,
+        "to": email,
+        "subject": "Your OTP Code",
+        "html": f"""
+            <h2>Your OTP is {otp}</h2>
+            <p>This OTP is valid for 5 minutes.</p>
+        """,
+    })

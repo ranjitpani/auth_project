@@ -2,17 +2,18 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+from .utils import send_otp_email
 import random
-from django.conf import settings
+
 from .forms import ProfileForm
 
 User = get_user_model()
 
+
+
 # ======================
 # AUTH – SIGNUP WITH OTP
 # ======================
-
 def signup(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -26,19 +27,15 @@ def signup(request):
             return render(request, 'signup.html', {'error': "Email already registered"})
 
         otp = random.randint(100000, 999999)
+
         request.session['signup_data'] = {
             'email': email,
             'password': password,
             'otp': str(otp)
         }
 
-        send_mail(
-    'Your OTP Code',
-    f'Your OTP is {otp}',
-    settings.DEFAULT_FROM_EMAIL,  # ✅ from settings
-    [email],
-    fail_silently=False
-)
+        send_otp_email(email, otp)   # ✅ FIXED
+
         return redirect('verify_otp')
 
     return render(request, 'signup.html')
@@ -105,18 +102,14 @@ def forgot_password(request):
             return render(request, 'forgot_password.html', {'error': 'Email not found'})
 
         otp = random.randint(100000, 999999)
+
         request.session['reset_otp'] = {
             'email': email,
             'otp': str(otp)
         }
 
-        send_mail(
-    'Your OTP Code',
-    f'Your OTP is {otp}',
-    settings.DEFAULT_FROM_EMAIL,  # ✅ from settings
-    [email],
-    fail_silently=False
-)
+        send_otp_email(email, otp)   # ✅ FIXED
+
         return redirect('verify_reset_otp')
 
     return render(request, 'forgot_password.html')
