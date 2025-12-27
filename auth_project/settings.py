@@ -67,14 +67,15 @@ WSGI_APPLICATION = 'auth_project.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'authdb',
-        'USER': 'authuser',
-        'PASSWORD': 'authpass123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME'),        # e.g., authdb
+        'USER': os.environ.get('DB_USER'),        # e.g., authuser
+        'PASSWORD': os.environ.get('DB_PASSWORD'),# e.g., authpass123
+        'HOST': os.environ.get('DB_HOST'),        # e.g., db-xxxx.onrender.com
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
