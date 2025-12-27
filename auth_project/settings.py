@@ -127,3 +127,7 @@ DEFAULT_FROM_EMAIL = "Village Store <onboarding@village-store.onrender.com>"
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# MEDIA FILES (Images)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
