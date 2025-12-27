@@ -199,11 +199,39 @@ from django.shortcuts import render
 from .models import Store, Product
 import random
 
+# @login_required
+# def home(request):
+#     user = request.user
+
+#     # Filter stores based on user location
+#     stores = Store.objects.filter(
+#         country=user.country,
+#         state=user.state,
+#         district=user.district,
+#         block=user.block
+#     )
+
+#     # Get all products and shuffle them randomly
+#     products = list(Product.objects.all())
+#     random.shuffle(products)
+
+#     context = {
+#         'stores': stores,
+#         'products': products,  # pass products to template
+#     }
+
+#     return render(request, 'home.html', context)
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from collections import defaultdict
+from .models import Store, Product
+import random
+
 @login_required
 def home(request):
     user = request.user
 
-    # Filter stores based on user location
+    # Filter stores by user location
     stores = Store.objects.filter(
         country=user.country,
         state=user.state,
@@ -211,13 +239,20 @@ def home(request):
         block=user.block
     )
 
-    # Get all products and shuffle them randomly
-    products = list(Product.objects.all())
-    random.shuffle(products)
+    # Products grouped by category
+    products = Product.objects.all()
+    products_by_category = defaultdict(list)
+    for p in products:
+        cat_name = p.category.name if p.category else 'Uncategorized'
+        products_by_category[cat_name].append(p)
+
+    # Shuffle products in each category
+    for plist in products_by_category.values():
+        random.shuffle(plist)
 
     context = {
         'stores': stores,
-        'products': products,  # pass products to template
+        'products_by_category': dict(products_by_category)
     }
 
     return render(request, 'home.html', context)

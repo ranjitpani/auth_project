@@ -1,50 +1,157 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Home{% endblock %}
-
 {% block content %}
+<style>
+/* ================= COMMON ================= */
+.container-flex{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:flex-start; /* left align */
+}
+/* ================= STORE CONTAINER BOX ================= */
+.store-container{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    border:1px solid #ddd;
+    padding:10px;
+    border-radius:8px;
+    background:#fff;
+    max-height:250px; /* fixed height */
+    overflow-y:auto;   /* scroll if overflow */
+}
+/* ================= STORE ================= */
+.store-card{
+    flex:0 0 32%; /* 3 per row desktop/mobile */
+    max-width:32%;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end; /* name bottom */
+    min-height:70px;
+}
+.store-card img{
+    width:45px;  /* icon size */
+    height:45px;
+    object-fit:cover;
+    border-radius:50%; /* circular */
+    margin-bottom:4px;
+}
+/* ================= PRODUCT ================= */
+.product-card{
+    flex:0 0 23%; /* 4 per row desktop */
+    max-width:23%;
+    border:1px solid #ddd;
+    padding:10px;
+    border-radius:6px;
+}
+.product-card img{
+    width:100%;
+    height:150px;
+    object-fit:cover;
+}
+/* ================= CATEGORY BAR ================= */
+.category-bar{
+    display:flex;
+    gap:15px;
+    overflow-x:auto;
+    padding:10px;
+    border-bottom:1px solid #ddd;
+    background:#fff;
+}
+.category-item{
+    min-width:80px;
+    text-align:center;
+    font-size:14px;
+}
+.category-item img{
+    width:45px;
+    height:45px;
+    display:block;
+    margin:0 auto 5px;
+}
+/* ================= MOBILE ================= */
+@media (max-width:768px){
+    .store-card{
+        flex:0 0 32%;
+        max-width:25%;
+    }
+    .product-card{
+        flex:0 0 48%;
+        max-width:33%;
+    }
+}
+/* ================= SMALL MOBILE ================= */
+@media (max-width:480px){
+    .store-card{
+        flex:0 0 25%;
+        max-width:20%;
+    }
+    .product-card{
+        flex:0 0 23%;
+        max-width:23%;
+    }
+}
+</style>
+
 <div style="padding:15px;">
-    <h2>🏠 Welcome to Village Store</h2>
-    <p>Home page content here...</p>
+    <h2>ðŸ¡ Welcome to Village Store</h2>
 </div>
 
-<h2>All Stores</h2>
-<div style="display:flex; flex-wrap:wrap; gap:10px;">
-    {% for store in stores %}
-    <div style="width:220px; border:1px solid #ddd; padding:10px; border-radius:6px;">
-        <a href="{% url 'store_detail' store.id %}">
-            {% if store.image %}
-                <img src="{{ store.image.url }}" width="200" height="150" style="object-fit:cover; border-radius:4px;">
-            {% else %}
-                <img src="{% static 'default_store.jpg' %}" width="200" height="150" style="object-fit:cover; border-radius:4px;">
-            {% endif %}
-        </a>
-        <h4>{{ store.name }}</h4>
-        <p>{{ store.details|truncatewords:10 }}</p>
-    </div>
-    {% endfor %}
+<!-- ================= CATEGORY ICONS ================= -->
+<div class="category-bar">
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/869/869636.png">All</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/3724/3724788.png">Grocery</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/3659/3659899.png">Electronics</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/892/892458.png">Clothes</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">Food</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">Medical</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png">Furniture</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png">Books</div>
+    <div class="category-item"><img src="https://cdn-icons-png.flaticon.com/512/809/809957.png">Toys</div>
 </div>
-
 <hr>
-<h2>Random Products</h2>
-<div style="display:flex; flex-wrap:wrap; gap:10px;">
-    {% for product in products %}
-    <div style="width:200px; border:1px solid #ddd; padding:10px; border-radius:6px;">
-        {% if product.image %}
-    {% if "http" in product.image.url %}
-        <img src="{{ product.image.url }}" style="width:100%; height:150px; object-fit:cover;">
-    {% else %}
-        <img src="{{ product.image.url }}" style="width:100%; height:150px; object-fit:cover;">
-    {% endif %}
-{% else %}
-    <img src="{% static 'default_product.jpg' %}" style="width:100%; height:150px; object-fit:cover;">
-{% endif %}
-        <h4>{{ product.name }}</h4>
-        <p>₹ {{ product.price }}</p>
+
+<!-- ================= STORES ================= -->
+<h2>All Stores</h2>
+<div class="store-container">
+{% for store in stores %}
+    <div class="store-card">
+        <a href="{% url 'store_detail' store.id %}" style="text-decoration:none;color:inherit;">
+            {% if store.image %}
+                <img src="{{ store.image.url }}">
+            {% else %}
+                <img src="{% static 'default_store.jpg' %}">
+            {% endif %}
+            <h4>{{ store.name }}</h4>
+        </a>
     </div>
-    {% empty %}
-        <p>No products available</p>
+{% endfor %}
+</div>
+<hr>
+
+<!-- ================= PRODUCTS ================= -->
+{% for category, products in products_by_category.items %}
+<h2>{{ category }}</h2>
+<div class="container-flex">
+    {% for product in products %}
+    <div class="product-card">
+        <a href="{% url 'product_detail' product.id %}" style="text-decoration:none;color:inherit;">
+            {% if product.image %}
+                <img src="{{ product.image.url }}">
+            {% else %}
+                <img src="{% static 'default_product.jpg' %}">
+            {% endif %}
+            <h4>{{ product.name }}</h4>
+            <p>â‚¹ {{ product.price }}</p>
+        </a>
+    </div>
     {% endfor %}
 </div>
-
+{% empty %}
+<p>No products available</p>
+{% endfor %}
 {% endblock %}
