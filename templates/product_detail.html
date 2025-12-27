@@ -93,16 +93,28 @@
 
   <!-- IMAGE SIDE SCROLL -->
   <div class="image-scroll">
-    {% for img in product.images.all %}
+  {% for img in product.images.all %}
     <div class="image-item">
-      <img src="{{ img.image.url }}" class="product-img">
+
+      {% if img.image_url %}
+        <!-- LIVE (Cloudinary) -->
+        <img src="{{ img.image_url }}" class="product-img">
+
+      {% elif img.image %}
+        <!-- LOCAL -->
+        <img src="{{ img.image.url }}" class="product-img">
+
+      {% else %}
+        <img src="{% static 'default_product.jpg' %}" class="product-img">
+      {% endif %}
+
     </div>
-    {% empty %}
+  {% empty %}
     <div class="image-item">
       <img src="{% static 'default_product.jpg' %}" class="product-img">
     </div>
-    {% endfor %}
-  </div>
+  {% endfor %}
+</div>
 
   <!-- PRODUCT INFO -->
   <div>
@@ -149,12 +161,17 @@
         background:#fff;
       ">
         {% if p.images.first %}
-          <img src="{{ p.images.first.image.url }}"
-               style="width:100%;height:120px;object-fit:contain;">
-        {% else %}
-          <img src="{% static 'default_product.jpg' %}"
-               style="width:100%;height:120px;object-fit:contain;">
-        {% endif %}
+  {% if p.images.first.image_url %}
+    <img src="{{ p.images.first.image_url }}"
+         style="width:100%;height:120px;object-fit:contain;">
+  {% else %}
+    <img src="{{ p.images.first.image.url }}"
+         style="width:100%;height:120px;object-fit:contain;">
+  {% endif %}
+{% else %}
+  <img src="{% static 'default_product.jpg' %}"
+       style="width:100%;height:120px;object-fit:contain;">
+{% endif %}
 
         <div style="font-size:13px;font-weight:600;margin-top:4px;">
           {{ p.name|truncatechars:18 }}
