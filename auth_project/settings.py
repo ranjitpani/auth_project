@@ -10,10 +10,10 @@ import os
 # load_dotenv()
 import os
 
-if os.environ.get("DJANGO_SETTINGS_MODULE") == "auth_project.settings":
-    # Only load .env in local development
-    from dotenv import load_dotenv
-    load_dotenv()
+# if os.environ.get("DJANGO_SETTINGS_MODULE") == "auth_project.settings":
+#     # Only load .env in local development
+#     from dotenv import load_dotenv
+#     load_dotenv()
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -119,7 +119,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
-import os
+
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
@@ -131,8 +131,8 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # MEDIA FILES (Images)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
