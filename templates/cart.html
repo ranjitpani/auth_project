@@ -1,4 +1,146 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Cart{% endblock %}
 {% block content %}
-<h1>Cart Page</h1>
+
+<h2 style="margin-bottom:15px;">My Cart</h2>
+
+{% if cart_items %}
+<div class="cart-container" style="padding-bottom:160px;">
+  {% for item in cart_items %}
+  <div style="
+      display:flex;
+      gap:12px;
+      padding:12px;
+      margin-bottom:16px;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.1);
+  ">
+    <!-- LEFT: IMAGE + QUANTITY -->
+    <div style="width:110px; text-align:center;">
+      {% if item.product.image %}
+        <img src="{{ item.product.image.url }}"
+             style="width:100%; height:110px; object-fit:cover; border-radius:10px;">
+      {% else %}
+        <img src="{% static 'default_product.jpg' %}"
+             style="width:100%; height:110px; object-fit:cover; border-radius:10px;">
+      {% endif %}
+
+      <!-- QUANTITY -->
+      <div style="margin-top:8px;">
+        <a href="{% url 'decrease_qty' item.product.id item.size %}"
+           class="btn btn-outline-secondary btn-sm">−</a>
+
+        <strong style="margin:0 8px;">{{ item.quantity }}</strong>
+
+        {% if item.quantity < item.stock %}
+          <a href="{% url 'increase_qty' item.product.id item.size %}"
+             class="btn btn-outline-secondary btn-sm">+</a>
+        {% else %}
+          <button class="btn btn-outline-secondary btn-sm" disabled>+</button>
+        {% endif %}
+      </div>
+
+      {% if item.quantity >= item.stock %}
+        <small style="color:red;">Only {{ item.stock }} left</small>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT -->
+    <div style="flex:1;">
+      <h5 style="margin-bottom:4px;">{{ item.product.name }}</h5>
+      <small>Size: {{ item.size }}</small>
+
+      <!-- PRICE -->
+      <div style="margin-top:6px;">
+        {% if item.product.discounted_price %}
+          <span style="text-decoration:line-through;color:#777;">
+            ₹ {{ item.product.price }}
+          </span>
+          <span style="font-weight:700;color:green;margin-left:6px;">
+            ₹ {{ item.product.discounted_price }}
+          </span>
+        {% else %}
+          <span style="font-weight:700;">
+            ₹ {{ item.product.price }}
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <a href="{% url 'remove_from_cart' item.product.id item.size %}"
+           style="
+             flex:1;
+             text-align:center;
+             background:#f44336;
+             color:#fff;
+             padding:8px;
+             border-radius:8px;
+             text-decoration:none;
+             font-weight:600;">
+          Remove
+        </a>
+
+        <a href="{% url 'buy_now' item.product.id item.size %}"
+           style="
+             flex:1;
+             text-align:center;
+             background:#4caf50;
+             color:#fff;
+             padding:8px;
+             border-radius:8px;
+             text-decoration:none;
+             font-weight:600;">
+          Buy Now
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 🔥 TOTAL BAR (NAVBAR UPARE FIXED) -->
+<div style="
+    position:fixed;
+    bottom:60px;   /* 👈 navbar ra upare */
+    left:0;
+    right:0;
+    background:#fff;
+    border-top:1px solid #eee;
+    padding:12px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 -2px 10px rgba(0,0,0,.12);
+    z-index:999;
+">
+  <!-- LEFT PRICE -->
+  <div>
+    <div style="font-size:14px;color:#777;">Total Amount</div>
+    <div style="font-size:20px;font-weight:800;">
+      ₹ {{ cart_total }}
+    </div>
+  </div>
+
+  <!-- RIGHT BUTTON -->
+ <a href="{% url 'checkout_address' %}?from=cart"
+   style="
+     background:#fb641b;
+     color:#fff;
+     padding:12px 22px;
+     border-radius:10px;
+     font-size:16px;
+     font-weight:700;
+     text-decoration:none;
+   ">
+   Place Order
+</a>
+</div>
+
+{% else %}
+<p>Your cart is empty.</p>
+{% endif %}
+
 {% endblock %}

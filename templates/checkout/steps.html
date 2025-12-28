@@ -1,0 +1,31 @@
+<style>
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.step {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #999;
+}
+
+.step.active {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+</style>
+
+<div class="steps">
+  <div class="step {% if step >= 1 %}active{% endif %}">1</div>
+  <div class="step {% if step >= 2 %}active{% endif %}">2</div>
+  <div class="step {% if step >= 3 %}active{% endif %}">3</div>
+</div>

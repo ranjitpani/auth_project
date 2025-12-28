@@ -1,0 +1,7 @@
+<form method="post" action="{% url 'edit_address' %}">
+    {% csrf_token %}
+    <input name="name" value="{{ address.name }}" required>
+    <input name="mobile" value="{{ address.mobile }}" required>
+    <textarea name="address" required>{{ address.address }}</textarea>
+    <button type="submit">Save</button>
+</form>

@@ -66,6 +66,16 @@ class Block(models.Model):
     name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
+    
+# ---------------------------
+# Store Category Model
+# ---------------------------
+class StoreCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    icon = models.ImageField(upload_to='store_category_icons/', blank=True, null=True)
+    icon_url = models.URLField(null=True, blank=True) 
+    def __str__(self):
+        return self.name    
 
 # ---------------------------
 # Store Model
@@ -78,7 +88,14 @@ class Store(models.Model):
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
     district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True)
     block = models.ForeignKey(Block, on_delete=models.SET_NULL, null=True, blank=True)
-    category = models.CharField(max_length=100, blank=True, null=True)
+    # category = models.CharField(max_length=100, blank=True, null=True)
+    category = models.ForeignKey(
+    StoreCategory,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='stores'
+)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -140,3 +157,22 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='product_images/') 
     def __str__(self):
         return f"{self.product.name} Image"
+    
+
+# models.py
+from django.conf import settings
+from django.db import models
+
+class UserAddress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=15)
+    alt_mobile = models.CharField(max_length=15, blank=True)
+    pincode = models.CharField(max_length=10)
+    address = models.TextField()
+    is_default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} - {self.pincode}"    
+    
+   

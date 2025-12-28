@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Country, State, District, Block, Store, Product, ProductStock, ProductImage, Category
+from .models import CustomUser, Country, State, District, Block, Store, Product, ProductStock, ProductImage, Category,StoreCategory
 
 # ------------------ CustomUser ------------------
 class CustomUserAdmin(UserAdmin):
@@ -29,8 +29,10 @@ admin.site.register(Block)
 
 # ------------------ Store ------------------
 class StoreAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country', 'state', 'district', 'block')
-    list_filter = ('country', 'state', 'district', 'block')
+    list_display = ('name', 'category', 'country', 'state', 'district', 'block')
+    list_filter = ('category', 'country', 'state', 'district', 'block')
+    search_fields = ('name',)
+
 admin.site.register(Store, StoreAdmin)
 
 # ------------------ Product ------------------
@@ -54,3 +56,8 @@ class ProductAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
+
+@admin.register(StoreCategory)
+class StoreCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon')
+    search_fields = ('name',)    

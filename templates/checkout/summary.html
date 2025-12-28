@@ -1,0 +1,209 @@
+{% include "checkout/steps.html" with step=2 %}
+
+<style>
+*{box-sizing:border-box;}
+body{margin:0;background:#f4f6fb;font-family:system-ui,sans-serif;}
+.page{width:100%;padding:12px;padding-bottom:110px;}
+
+/* SECTION TITLES */
+h4{margin:14px 4px 8px;font-size:16px;font-weight:700;color:#0f172a;}
+
+/* CARD */
+.box{
+  width:100%;
+  background:#fff;
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  animation:fadeUp .3s ease;
+  position:relative;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ADDRESS */
+.address-name{font-weight:700;font-size:15px;}
+.change-link{display:inline-block;margin-top:8px;color:#2563eb;font-weight:600;text-decoration:none;}
+.edit-btn{
+  position:absolute;
+  top:14px;
+  right:14px;
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+.edit-btn:hover{background:#1e40af;}
+
+/* PRODUCT */
+.product-box{display:flex;gap:12px;}
+.product-box img{width:90px;height:90px;object-fit:cover;border-radius:12px;background:#f1f5f9;}
+
+/* PRICE */
+.price-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
+.price-row.discount{color:#16a34a;}
+.total{font-size:17px;font-weight:800;}
+
+/* FIXED BOTTOM BAR */
+.fixed-bottom{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#fff;
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 -4px 20px rgba(0,0,0,.18);
+}
+.pay-btn{
+  background:linear-gradient(135deg,#2563eb,#1e40af);
+  color:#fff;
+  padding:14px 24px;
+  border-radius:14px;
+  text-decoration:none;
+  font-weight:700;
+  font-size:15px;
+}
+.pay-btn:active{transform:scale(.96);}
+
+/* MODAL FOR EDIT ADDRESS */
+.modal{
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+.modal-content{
+  background:#fff;
+  width:95%;
+  max-width:400px;
+  padding:20px;
+  border-radius:12px;
+  position:relative;
+}
+.close-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:#f87171;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  font-weight:700;
+  cursor:pointer;
+}
+.modal-content input,
+.modal-content textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+.modal-content button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  font-weight:700;
+}
+</style>
+
+<div class="page">
+<!-- ADDRESS -->
+<h4>Deliver To</h4>
+<div class="box">
+  <div class="address-name">{{ address.name }}</div>
+  <div>{{ address.address|linebreaksbr }}</div>
+  <div style="margin-top:6px;">📞 {{ address.mobile }}</div>
+  <a class="change-link" href="{% url 'checkout_address' %}">Change Address</a>
+  <!-- <button class="edit-btn" onclick="openModal()">Edit</button> -->
+</div>
+
+<!-- PRODUCT -->
+<h4>Products</h4>
+
+{% for item in items %}
+<div class="box product-box">
+  {% if item.product.image %}
+    <img src="{{ item.product.image.url }}">
+  {% endif %}
+
+  <div>
+    <b>{{ item.product.name }}</b><br>
+    Size: {{ item.size }}<br>
+    Qty: {{ item.qty }}<br>
+    <b style="font-size:15px;">₹ {{ item.price }}</b>
+  </div>
+</div>
+{% endfor %}
+
+<!-- PRICE -->
+<h4>Price Details</h4>
+<div class="box">
+  <div class="price-row">
+    <span>Price ({{ items|length }} items)</span>
+    <span>₹ {{ original_price }}</span>
+  </div>
+
+  <div class="price-row discount">
+    <span>Discount</span>
+    <span>- ₹ {{ discount }}</span>
+  </div>
+
+  <hr>
+
+  <div class="price-row total">
+    <span>Total Amount</span>
+    <span>₹ {{ total_amount }}</span>
+  </div>
+</div>
+</div>
+
+<!-- FIXED BOTTOM -->
+<div class="fixed-bottom">
+  <div>
+    <small>Total</small><br>
+    <b style="font-size:18px;">₹ {{ total_amount }}</b>
+  </div>
+  <a href="{% url 'checkout_payment' %}" class="pay-btn">Continue →</a>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal()">×</button>
+    <h4>Edit Address</h4>
+   <form method="post" action="{% url 'edit_address' address.id %}">
+    {% csrf_token %}
+    <input name="name" value="{{ address.name }}" placeholder="Full Name" required>
+    <input name="mobile" value="{{ address.mobile }}" placeholder="Mobile Number" required maxlength="10">
+    <textarea name="address" placeholder="Full Address" rows="4" required>{{ address.address }}</textarea>
+    <button type="submit">Save</button>
+</form>
+  </div>
+</div>
+
+<script>
+function openModal(){
+  document.getElementById("editModal").style.display = "flex";
+}
+function closeModal(){
+  document.getElementById("editModal").style.display = "none";
+}
+</script>

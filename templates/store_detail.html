@@ -3,48 +3,245 @@
 {% block title %}{{ store.name }}{% endblock %}
 
 {% block content %}
-<h2 style="text-align:center; margin-bottom:15px;">{{ store.name }}</h2>
-<div style="text-align:center; margin-bottom:20px;">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+a{text-decoration:none;color:inherit;}
+body{font-family:'Poppins',sans-serif;}
+/* ================= STICKY SEARCH ================= */
+.sticky-search-bar{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    background:#fff;
+    padding:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.search-form{
+    display:flex;
+    gap:6px;
+}
+.search-form input{
+    flex:1;
+    padding:6px 10px;
+    border-radius:4px;
+    border:1px solid #ccc;
+}
+.search-form button{
+    padding:6px 12px;
+    border:none;
+    border-radius:4px;
+    background:#007bff;
+    color:white;
+    cursor:pointer;
+}
+/* ================= CATEGORY BAR ================= */
+.category-bar{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding:6px 0;
+    transition: all 0.3s ease;
+}
+.category-bar::-webkit-scrollbar{height:5px;}
+.category-bar::-webkit-scrollbar-thumb{background:#007bff; border-radius:4px;}
+.category-item{
+    min-width:60px;
+    text-align:center;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition: all 0.3s ease;
+}
+.category-item img{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    margin-bottom:4px;
+    transition: all 0.3s ease;
+}
+.category-bar.shrink .category-item img{
+    width:0px;
+    height:0px;
+}
+/* ================= PRODUCT CARDS ================= */
+.category-section{margin-bottom:15px;}
+.category-section h3{margin:10px 0 5px 0;}
+.product-row{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:10px;
+    scroll-snap-type:x mandatory;
+}
+.product-card{
+    min-width:180px;
+    border:1px solid #ddd;
+    padding:8px;
+    border-radius:6px;
+    scroll-snap-align:start;
+}
+.product-card img{width:100%; height:130px; object-fit:cover; border-radius:6px;}
+.product-card h4{font-size:14px; margin:4px 0;}
+.price-row{font-size:14px; margin-top:4px;}
+.old-price{text-decoration:line-through;color:#888;}
+.new-price{font-weight:bold;color:green;}
+.off-badge{background:#00e64d;color:#fff;padding:2px 4px;border-radius:4px;font-size:11px;}
+</style>
+
+<!-- ================= STORE HEADER ================= -->
+<h2 style="text-align:center;margin:10px 0;">{{ store.name }}</h2>
+<div style="text-align:center;margin:0 auto 15px auto;width:90%; max-width:600px; height:170px; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     {% if store.image %}
-        <img src="{{ store.image.url }}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px;">
+        <img src="{{ store.image.url }}" style="width:100%; height:100%; object-fit:cover; display:block;">
     {% else %}
-        <img src="{% static 'default_store.jpg' %}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px;">
+        <img src="{% static 'default_store.jpg' %}" style="width:100%; height:100%; object-fit:cover; display:block;">
     {% endif %}
 </div>
-<p>{{ store.details }}</p>
-<hr>
+<p style="margin-bottom:15px;">{{ store.details }}</p>
 
-{% comment %} Category-wise product display {% endcomment %}
-{% for category, cat_products in products_by_category.items %}
-    <h3 style="margin-top:20px;">{{ category }}</h3>
-    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">
-        {% for product in cat_products %}
-        <a href="{% url 'product_detail' product.id %}" style="text-decoration:none; color:inherit;">
-            <div style="min-width:180px; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fff; position:relative;">
-                {% if product.image_url %}
-    <img src="{{ product.image_url }}" style="width:100%; height:150px; object-fit:cover;">
-{% elif product.image %}
-    <img src="{{ product.image.url }}" style="width:100%; height:150px; object-fit:cover;">
-{% else %}
-    <img src="{% static 'default_product.jpg' %}">
-{% endif %}
-
-                <h4 style="margin:0; font-size:14px;">{{ product.name|truncatechars:20 }}</h4>
-
-                <div style="margin-top:4px; font-size:13px; display:flex; justify-content:space-between; align-items:center;">
-                    {% if product.discounted_price %}
-                        <span style="text-decoration: line-through; color: #888;">₹ {{ product.price }}</span>
-                        <span style="font-weight:bold; color:#e60023;">₹ {{ product.discounted_price }}</span>
-                        <span style="background:#e60023; color:#fff; font-size:10px; padding:2px 4px; border-radius:3px;">
-                            -{{ product.discount_percentage }}%
-                        </span>
-                    {% else %}
-                        <span style="font-weight:bold;">₹ {{ product.price }}</span>
-                    {% endif %}
-                </div>
-            </div>
-        </a>
+<!-- ================= STICKY SEARCH + CATEGORY ================= -->
+<div class="sticky-search-bar">
+    <form class="search-form" id="storeSearchForm" onsubmit="return false;">
+        <input type="text" id="storeSearchInput" placeholder="Search products..." value="{{ search_query }}">
+        <button type="button" id="searchBtn">Search</button>
+    </form>
+    <div id="categoryBar" class="category-bar">
+        <div class="category-item" data-category="all" onclick="showCategory('all')">
+            <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png">
+            <div>All</div>
+        </div>
+        {% for category, products in products_by_category.items %}
+        <div class="category-item" data-category="{{ category|slugify }}" onclick="showCategory('{{ category|slugify }}')">
+            <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+            <div>{{ category }}</div>
+        </div>
         {% endfor %}
     </div>
-{% endfor %}
+</div>
+<hr>
+
+<!-- ================= PRODUCTS ================= -->
+<div id="productsContainer">
+    {% for category, cat_products in products_by_category.items %}
+    <div class="category-section" data-category="{{ category|slugify }}">
+        <h3>{{ category }}</h3>
+        <div class="product-row">
+            {% for product in cat_products %}
+            <a href="{% url 'product_detail' product.id %}" style="text-decoration:none; color:inherit;">
+                <div class="product-card">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}">
+                    {% else %}
+                        <img src="{% static 'default_product.jpg' %}">
+                    {% endif %}
+                    <h4>{{ product.name|truncatechars:20 }}</h4>
+                    {% if product.discounted_price and product.discounted_price < product.price %}
+                        <div class="price-row">
+                            <span class="old-price">₹ {{ product.price }}</span>
+                            <span class="new-price">₹ {{ product.discounted_price }}</span>
+                            <span class="off-badge">{{ product.discount_percentage }}% off</span>
+                        </div>
+                    {% else %}
+                        <div class="price-row"><span class="new-price">₹ {{ product.price }}</span></div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+// Keep original products HTML to restore
+const originalProductsHTML = document.getElementById("productsContainer").innerHTML;
+const searchInput = document.getElementById("storeSearchInput");
+
+// Show/hide categories
+function showCategory(category){
+    // Clear search input
+    searchInput.value = '';
+
+    if(category === 'all'){
+        // Show all products
+        document.getElementById("productsContainer").innerHTML = originalProductsHTML;
+    } else {
+        // Show only selected category
+        document.querySelectorAll(".category-section").forEach(section=>{
+            section.style.display = (section.dataset.category === category) ? "block" : "none";
+        });
+    }
+}
+
+// Shrink category icons on scroll
+window.addEventListener("scroll",()=>{
+    let categoryBar = document.getElementById("categoryBar");
+    categoryBar.classList.toggle("shrink", window.scrollY>120);
+});
+
+// Render products from AJAX
+function renderProducts(products){
+    const container = document.getElementById("productsContainer");
+    container.innerHTML = "";
+    if(products.length===0){
+        container.innerHTML = "<p>No products found</p>";
+        return;
+    }
+    let byCategory = {};
+    products.forEach(p=>{
+        let cat = p.category || "Uncategorized";
+        if(!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(p);
+    });
+    for(const cat in byCategory){
+        let html = `<div class="category-section" data-category="${cat}">
+            <h3>${cat}</h3>
+            <div class="product-row">`;
+        byCategory[cat].forEach(p=>{
+            html += `<a href="/product/${p.id}" style="text-decoration:none; color:inherit;">
+                <div class="product-card">
+                    <img src="${p.image}">
+                    <h4>${p.name}</h4>
+                    ${p.discounted_price ? `<div class="price-row"><span class="old-price">â‚¹${p.price}</span> <span class="new-price">â‚¹${p.discounted_price}</span> <span class="off-badge">${p.discount_percentage}% off</span></div>` : `<div class="price-row"><span class="new-price">â‚¹${p.price}</span></div>`}
+                </div>
+            </a>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML += html;
+    }
+}
+
+// AJAX search function
+function performSearch(){
+    let q = searchInput.value.trim();
+    if(q.length < 2){
+        // Restore original products if search is cleared
+        document.getElementById("productsContainer").innerHTML = originalProductsHTML;
+        return;
+    }
+    fetch(`${location.pathname}?q=${q}`, {headers:{'x-requested-with':'XMLHttpRequest'}})
+    .then(res => res.json())
+    .then(data => renderProducts(data.products));
+}
+
+// Trigger search on typing
+searchInput.addEventListener("keyup", performSearch);
+
+// Trigger search on Enter key
+searchInput.addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        e.preventDefault();
+        performSearch();
+    }
+});
+
+// Optional: search button click
+document.getElementById("searchBtn").addEventListener("click", performSearch);
+</script>
 {% endblock %}
