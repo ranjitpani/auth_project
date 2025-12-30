@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h2 style="margin:16px;">Order #{{ order.id }} Details</h2>
+
+{% for item in order.items.all %}
+  {% if item.return_requested or item.refund_requested or item.exchange_requested %}
+  <div style="background:#fff3cd;
+              border:1px solid #ffeeba;
+              padding:14px;
+              border-radius:10px;
+              margin:12px;
+              box-shadow:0 4px 10px rgba(0,0,0,.08)">
+
+    <h3 style="margin-top:0;">📦 Product Request Status</h3>
+
+    <p>
+      <b>Product:</b> {{ item.product_name }}
+    </p>
+
+    <p>
+      <b>Request Type:</b>
+      {% if item.return_requested %}Return{% endif %}
+      {% if item.refund_requested %}Refund{% endif %}
+      {% if item.exchange_requested %}Exchange{% endif %}
+    </p>
+
+    <p>
+      <b>Status:</b>
+      {% if item.request_status == "pending" %}
+        <span style="color:orange;font-weight:bold;">Pending Approval</span>
+      {% elif item.request_status == "approved" %}
+        <span style="color:green;font-weight:bold;">Approved</span>
+      {% elif item.request_status == "rejected" %}
+        <span style="color:red;font-weight:bold;">Rejected</span>
+      {% endif %}
+    </p>
+
+    <p>
+      <b>Requested Date:</b> {{ item.request_date|default:"N/A" }}
+    </p>
+
+    <p>
+      <b>Processed Date:</b> {{ item.processed_date|default:"Not processed yet" }}
+    </p>
+
+    {% if item.request_status == "approved" %}
+      <p style="color:#155724;font-weight:bold;">
+        🚚 Delivery boy will contact you soon for pickup.
+      </p>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endfor %}
+
+<div style="background:#fff;margin:12px;padding:14px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.1)">
+  
+  <!-- Order Summary -->
+  <h3>Order Summary</h3>
+  <p><b>Payment:</b> {{ order.get_payment_method_display }}</p>
+  <p><b>Total Amount:</b> ₹ {{ order.total_amount }}</p>
+  <p><b>Status:</b> {{ order.get_status_display }}</p>
+  <p><b>Expected Delivery:</b> {{ order.expected_delivery|default:"N/A" }}</p>
+  <hr>
+
+  <!-- Products -->
+  <h3>Products</h3>
+  {% for item in order.items.all %}
+  <div style="display:flex;align-items:center;margin-bottom:12px;">
+    {% if item.product %}
+    {% if item.product.image %}
+        <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}" width="70" style="margin-right:12px; border-radius:6px;">
+    {% elif item.product.images.first %}
+        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product_name }}" width="70" style="margin-right:12px; border-radius:6px;">
+    {% else %}
+        <img src="{% static 'default_product.jpg' %}" alt="{{ item.product_name }}" width="70" style="margin-right:12px; border-radius:6px;">
+    {% endif %}
+{% endif %}
+    <div>
+      <b>{{ item.product_name }}</b> {% if item.size %}({{ item.size }}){% endif %}<br>
+      Quantity: {{ item.quantity }}<br>
+      Price: ₹ {{ item.price }}
+    </div>
+  </div>
+  {% endfor %}
+  <hr>
+
+  <!-- Delivery Address -->
+  <h3>Delivery Address</h3>
+  <div style="background:#f5f5f5;padding:10px;border-radius:8px;">
+    <p><b>Name:</b> {{ order.delivery_name }}</p>
+<p><b>Phone:</b> {{ order.delivery_phone }}</p>
+<p><b>Address:</b> {{ order.delivery_address }}</p>
+<p><b>City:</b> {{ order.delivery_city }}</p>
+<p><b>Postal Code:</b> {{ order.delivery_postal_code }}</p>
+  </div>
+  <hr>
+
+  <!-- Price Details -->
+  <h3>Price Details</h3>
+  <div style="background:#f5f5f5;padding:10px;border-radius:8px;">
+    <p><b>Subtotal:</b> ₹ {{ order.subtotal }}</p>
+<p><b>Shipping:</b> ₹ {{ order.shipping_cost }}</p>
+<p><b>Total:</b> ₹ {{ order.total_amount }}</p>
+  </div>
+  <hr>
+  {% for item in order.items.all %}
+  <div class="item-box">
+    <p>{{ item.product.product_name }}</p>
+
+    <a href="{% url 'product_invoice' item.id %}">
+      View Invoice
+    </a>
+  </div>
+{% endfor %}
+
+  <!-- Shop More Button -->
+  <a href="{% url 'home' %}" style="display:inline-block;margin-top:14px;background:#007bff;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;">
+    Shop More
+  </a>
+
+</div>
+{% endblock %}

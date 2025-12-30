@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="form-heading">{{ action|capfirst }} Request for {{ item.product_name }}</h2>
+
+<form method="POST" enctype="multipart/form-data" class="request-form">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label>Reason *</label>
+    {{ form.request_reason }}
+  </div>
+
+  <div class="form-group">
+    <label>Upload Images (3 required)</label>
+    {{ form.image1 }}<br>
+    {{ form.image2 }}<br>
+    {{ form.image3 }}
+  </div>
+
+  {% if action == "refund" or action == "return" %}
+    <div class="form-group">
+      <label>Payment Method *</label>
+      {{ form.refund_method }}
+    </div>
+
+    <div id="upi_fields" class="form-group hidden">
+      <label>UPI ID *</label>
+      {{ form.upi_id }}
+    </div>
+
+    <div id="bank_fields" class="form-group hidden">
+      <label>Bank Name *</label>
+      {{ form.bank_name }}
+      <label>Account Number *</label>
+      {{ form.bank_account_number }}
+      <label>IFSC *</label>
+      {{ form.bank_ifsc }}
+    </div>
+  {% endif %}
+
+  <button type="submit" class="submit-btn">Submit Request</button>
+</form>
+
+<script>
+const refundMethod = document.getElementById("id_refund_method");
+function togglePaymentFields() {
+  if (!refundMethod) return;
+  document.getElementById("upi_fields").style.display =
+    refundMethod.value === "upi" ? "block" : "none";
+  document.getElementById("bank_fields").style.display =
+    refundMethod.value === "bank" ? "block" : "none";
+}
+if (refundMethod) {
+  togglePaymentFields();
+  refundMethod.addEventListener("change", togglePaymentFields);
+}
+</script>
+
+<style>
+/* ===== Form Container ===== */
+.request-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  animation: fadeIn 0.6s ease-out;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ===== Form Heading ===== */
+.form-heading {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  color: #333;
+  animation: slideDown 0.6s ease-out;
+}
+
+/* ===== Form Groups ===== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #555;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #ff7f50;
+  box-shadow: 0 0 5px rgba(255,127,80,0.5);
+}
+
+/* ===== Submit Button ===== */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: #ff7f50;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.submit-btn:hover {
+  background: #ff944d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+/* ===== Hidden Fields ===== */
+.hidden {
+  display: none;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes slideDown {
+  from {opacity: 0; transform: translateY(-20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+</style>
+
+{% endblock %}

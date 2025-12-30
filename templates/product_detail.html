@@ -4,227 +4,444 @@
 {% block content %}
 
 <style>
-/* ===== PAGE ===== */
-.page-wrap{
-  padding:0 12px;
-  overflow-x:hidden;
-}
+  /* ===== PAGE ===== */
+  .page-wrap {
+    padding: 0 12px 120px;
+    overflow-x: hidden;
+    animation: fadeIn .4s ease;
+  }
 
-/* ===== FLIPKART IMAGE SCROLL ===== */
-.image-scroll{
+  /* ===== IMAGE SCROLL ===== */
+  .image-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .image-scroll::-webkit-scrollbar {
+    display: none
+  }
+
+  .image-item {
+    min-width: 100%;
+    scroll-snap-align: start;
+    background: #f6f6f6;
+    display: flex;
+    justify-content: center;
+    border-radius: 16px;
+  }
+
+  .product-img {
+    width: 100%;
+    height: 340px;
+    object-fit: contain;
+    transition: transform .35s ease;
+  }
+
+  .image-item:active .product-img {
+    transform: scale(.97);
+  }
+
+  /* ===== PRODUCT INFO ===== */
+  .product-title {
+    font-size: 19px;
+    font-weight: 800;
+    margin-top: 12px;
+  }
+
+  .product-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.45;
+    margin-top: 4px;
+  }
+
+  /* ===== PRICE ===== */
+  .price-main {
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .price-cut {
+    text-decoration: line-through;
+    color: #888;
+    margin-right: 6px;
+  }
+
+  /* ===== SIZE ===== */
+  .size-btn {
+    min-width: 54px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    margin: 6px 6px 0 0;
+    transition: .25s;
+  }
+
+  .size-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .size-btn:active {
+    transform: scale(.94);
+  }
+
+  .size-btn.active {
+    background: #2874f0;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(40, 116, 240, .35);
+  }
+
+  /* ===== ACTION BAR ===== */
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: 30px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 20px 20px 0 0;
+    animation: slideUp .45s ease;
+  }
+
+  .btn-cart,
+  .btn-buy {
+    width: 48%;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px;
+    border-radius: 18px;
+    transition: .25s;
+    letter-spacing: .3px;
+
+
+  }
+
+  .btn-cart {
+    background: linear-gradient(135deg, #ffb347, #ff9f00);
+    color: #fff;
+    margin-left: -1%;
+  }
+
+  .btn-buy {
+    background: linear-gradient(135deg, #ff7a18, #fb641b);
+    color: #fff;
+    margin-right: -1%;
+  }
+
+  .btn-cart:active,
+  .btn-buy:active {
+    transform: scale(.94);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .25) inset;
+  }
+
+  /* ===== SIMILAR PRODUCTS ===== */
+  .similar-card {
+    min-width: 140px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 8px;
+    background: #fff;
+    transition: .25s;
+  }
+
+  .similar-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+  }
+
+  /* ===== RATING ===== */
+.stars {
   display:flex;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  gap:10px;
-  padding:10px 0;
+  gap:2px;
 }
-.image-scroll::-webkit-scrollbar{
-  display:none;
+.star {
+  font-size:21px;
 }
-.image-item{
-  min-width:100%;
-  scroll-snap-align:start;
-  background:#f5f5f5;
-  display:flex;
-  justify-content:center;
+.star.full {
+  color:#facc15; /* yellow */
 }
-.product-img{
-  width:100%;
-  height:340px;
-  object-fit:contain;
+.star.half {
+  color:#facc15;
+  
+}
+.star.empty {
+  color:black;
 }
 
-/* ===== TEXT ===== */
-.product-title{
-  font-size:18px;
-  font-weight:600;
-  margin-top:10px;
-}
-.product-desc{
-  font-size:14px;
-  color:#555;
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0
+    }
+
+    to {
+      opacity: 1
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(60px);
+      opacity: 0
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1
+    }
+  }
+/* ===== SIZE ERROR ANIMATION ===== */
+.size-error {
+  display: none;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #dc2626;
+  animation: slideFade .35s ease;
 }
 
-/* ===== PRICE ===== */
-.price-main{
-  font-size:22px;
-  font-weight:700;
-}
-.price-cut{
-  text-decoration:line-through;
-  color:#777;
-  margin-right:6px;
-}
-
-/* ===== SIZE ===== */
-.size-btn{
-  min-width:52px;
-  padding:10px 14px;
-  border-radius:10px;
-  font-weight:600;
-}
-.size-btn.active{
-  background:#2874f0;
-  color:#fff;
+@keyframes slideFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ===== BOTTOM BAR ===== */
-.action-bar{
-  position:sticky;
-  bottom:0;
-  background:#fff;
-  padding:12px;
-  display:flex;
-  justify-content:space-between;
-  box-shadow:0 -3px 12px rgba(0,0,0,.12);
-}
-.btn-cart,.btn-buy{
-  width:48%;
-  font-size:16px;
-  font-weight:700;
-  padding:14px;
-  border-radius:14px;
-}
-.btn-cart{background:#ff9f00;color:#fff;}
-.btn-buy{background:#fb641b;color:#fff;}
+  /* ===== MOBILE ===== */
+  @media(max-width:480px) {
+    .product-img {
+      height: 300px
+    }
+
+    .product-title {
+      font-size: 18px
+    }
+
+    .price-main {
+      font-size: 21px
+    }
+
+    .btn-cart {
+      margin-left: -10%;
+    }
+
+    .btn-buy {
+      margin-right: -10%;
+    }
+  }
 </style>
 
 <div class="page-wrap">
 
-  <!-- IMAGE SIDE SCROLL -->
+  <!-- IMAGE SCROLL -->
   <div class="image-scroll">
-  {% for img in product.images.all %}
+    {% for img in product.images.all %}
     <div class="image-item">
-
-      {% if img.image_url %}
-        <!-- LIVE (Cloudinary) -->
-        <img src="{{ img.image_url }}" class="product-img">
-
-      {% elif img.image %}
-        <!-- LOCAL -->
-        <img src="{{ img.image.url }}" class="product-img">
-
+      {% if img.image %}
+      <img src="{{ img.image.url }}" class="product-img">
       {% else %}
-        <img src="{% static 'default_product.jpg' %}" class="product-img">
+      <img src="{% static 'default_product.jpg' %}" class="product-img">
       {% endif %}
-
     </div>
-  {% empty %}
+    {% empty %}
     <div class="image-item">
       <img src="{% static 'default_product.jpg' %}" class="product-img">
     </div>
-  {% endfor %}
-</div>
+    {% endfor %}
+  </div>
 
   <!-- PRODUCT INFO -->
   <div>
     <div class="product-title">{{ product.name }}</div>
     <div class="product-desc">{{ product.description }}</div>
-
-    {% if product.discounted_price %}
-      <span class="price-cut">₹ {{ product.price }}</span>
-      <span class="price-main">₹ {{ product.discounted_price }}</span>
-    {% else %}
-      <span class="price-main">₹ {{ product.price }}</span>
-    {% endif %}
-  </div>
-     <!--size-->
-     <div class="mt-3">
-  <b>Select Size</b><br>
-  {% for stock in product.stocks.all %}
-    <a href="{% url 'add_to_cart' product.id stock.size %}" class="btn btn-outline-secondary size-btn">
-      {{ stock.size }}
-    </a>
-  {% endfor %}
-</div>
-
-<div class="action-bar">
-  {% if product.stocks.exists %}
-    <a href="{% url 'add_to_cart' product.id product.stocks.first.size %}" class="btn btn-cart">🛒 Add to Cart</a>
-    <a href="{% url 'buy_now' product.id product.stocks.first.size %}" class="btn btn-buy">💳 Buy Now</a>
-  {% else %}
-    <button class="btn btn-cart" disabled>Out of Stock</button>
-    <button class="btn btn-buy" disabled>Out of Stock</button>
-  {% endif %}
-</div>
-
-
-
-<!-- SIMILAR PRODUCTS -->
-<div class="mt-4">
-  <h5 class="fw-bold mb-2">Similar Products</h5>
-
-  <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
-    {% for p in similar_products %}
-    <a href="{% url 'product_detail' p.id %}" style="text-decoration:none;color:inherit;">
-      <div style="
-        min-width:140px;
-        border:1px solid #eee;
-        border-radius:10px;
-        padding:8px;
-        background:#fff;
-      ">
-        {% if p.images.first %}
-  {% if p.images.first.image_url %}
-    <img src="{{ p.images.first.image_url }}"
-         style="width:100%;height:120px;object-fit:contain;">
-  {% else %}
-    <img src="{{ p.images.first.image.url }}"
-         style="width:100%;height:120px;object-fit:contain;">
+<!-- MAIN PRODUCT PRICE -->
+{% if product.discounted_price %}
+  <span class="price-cut">₹ {{ product.price }}</span>
+  <span class="price-main">₹ {{ product.discounted_price }}</span>
+  {% if product.off_percent %}
+    <span style="color:green;font-weight:700;font-size:14px;">
+      {{ product.off_percent }}% OFF
+    </span>
   {% endif %}
 {% else %}
-  <img src="{% static 'default_product.jpg' %}"
-       style="width:100%;height:120px;object-fit:contain;">
+  <span class="price-main"> ₹ {{ product.price }}</span>
 {% endif %}
-
-        <div style="font-size:13px;font-weight:600;margin-top:4px;">
-          {{ p.name|truncatechars:18 }}
-        </div>
-
-        <div style="font-size:14px;font-weight:700;">
-          ₹ {{ p.discounted_price|default:p.price }}
-        </div>
-      </div>
-    </a>
-    {% empty %}
-      <p>No similar products</p>
+  </div>
+ <!-- ⭐ RATING -->
+<div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+  <div class="stars">
+    {% for i in "12345" %}
+      {% if product.rating >= forloop.counter %}
+        <span class="star full">★</span>
+      {% elif product.rating >= forloop.counter|add:"-0.5" %}
+        <span class="star half">★</span>
+      {% else %}
+        <span class="star empty">☆</span>
+      {% endif %}
     {% endfor %}
   </div>
+  <span style="font-size:13px;color:#555;font-weight:600;">
+    {{ product.rating }}/5
+  </span>
 </div>
 
+
+
+  <!-- SIZE -->
+  <div class="mt-3">
+    <b>Select Size</b><br>
+
+    {% if available_stocks %}
+    {% for stock in available_stocks %}
+    <button type="button" class="btn btn-outline-secondary size-btn" data-size="{{ stock.size }}">
+      {{ stock.size }}
+    </button>
+    {% endfor %}
+    <div id="size-error" class="size-error">
+    Please select size
+  </div>
+    {% else %}
+    <p style="color:red;font-weight:700;margin-top:8px;">
+      Out of Stock
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    {% if available_stocks %}
+    <a href="#" class="btn btn-cart">🛒 Add to Cart</a>
+    <a href="#" class="btn btn-buy">💳 Buy Now</a>
+    {% else %}
+    <button class="btn btn-cart" disabled>Out of Stock</button>
+    <button class="btn btn-buy" disabled>Out of Stock</button>
+    {% endif %}
+  </div>
+
+  <!-- SIMILAR PRODUCTS -->
+  {% if products_by_category %}
+  {% for category, products in products_by_category.items %}
+  <div class="mt-4">
+    <h5 class="fw-bold mb-2">
+      {{ category.name }}
+    </h5>
+
+    <div style="display:flex;gap:10px;overflow-x:auto;">
+      {% for p in products %}
+      <a href="{% url 'product_detail' p.id %}"
+         style="text-decoration:none;color:inherit;">
+        <div class="similar-card">
+          {% if p.images.first %}
+            <img src="{{ p.images.first.image.url }}"
+                 style="width:100%;height:120px;object-fit:contain;">
+          {% else %}
+            <img src="{% static 'default_product.jpg' %}"
+                 style="width:100%;height:120px;object-fit:contain;">
+          {% endif %}
+
+          <div style="font-size:13px;font-weight:600;">
+            {{ p.name|truncatechars:18 }}
+          </div>
+{% if p.discounted_price %}
+  <div style="font-size:12px;color:#888;text-decoration:line-through;">
+    ₹ {{ p.price }}
+  </div>
+  <div style="font-size:14px;font-weight:800;">
+    ₹ {{ p.discounted_price }}
+    {% if p.off_percent %}
+      <span style="color:green;font-size:12px;font-weight:700;">
+        {{ p.off_percent }}% OFF
+      </span>
+    {% endif %}
+  </div>
+{% else %}
+  <div style="font-size:14px;font-weight:800;">
+    ₹ {{ p.price }}
+  </div>
+{% endif %}
+
+<div class="stars" style="margin-top:2px;">
+  {% for i in "12345" %}
+    {% if p.rating >= forloop.counter %}
+      <span class="star full">★</span>
+    {% elif p.rating >= forloop.counter|add:"-0.5" %}
+      <span class="star half">★</span>
+    {% else %}
+      <span class="star empty">☆</span>
+    {% endif %}
+  {% endfor %}
+</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+{% endif %}
+
+</div>
+
+<!-- JS -->
 <script>
-let selectedSize = null;
+  
+  let selectedSize = null;
+  let hideTimer = null;
+  const errorBox = document.getElementById("size-error");
 
-// Handle size button click
-document.querySelectorAll('.size-btn').forEach(btn=>{
-  btn.addEventListener('click', e=>{
-    e.preventDefault();
-    // Remove active from all buttons
-    document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
-    // Add active to clicked button
-    btn.classList.add('active');
-    // Set selected size
-    selectedSize = btn.innerText.trim();
-    // Update Add to Cart and Buy Now buttons
-    document.querySelector('.btn-cart').href = `/add-to-cart/{{ product.id }}/` + selectedSize + '/';
-    document.querySelector('.btn-buy').href = `/buy-now/{{ product.id }}/` + selectedSize + '/';
+  function showSizeError() {
+    if (!errorBox) return;
+
+    errorBox.style.display = "block";
+    errorBox.style.animation = "none";
+    errorBox.offsetHeight; // reflow
+    errorBox.style.animation = "slideFade .35s ease";
+
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      errorBox.style.display = "none";
+    }, 2500); // 2.5 sec auto hide
+  }
+
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.size-btn')
+        .forEach(b => b.classList.remove('active'));
+
+      btn.classList.add('active');
+      selectedSize = btn.dataset.size;
+
+      if (errorBox) errorBox.style.display = "none";
+
+      document.querySelector('.btn-cart').href =
+        `/add-to-cart/{{ product.id }}/${selectedSize}/`;
+      document.querySelector('.btn-buy').href =
+        `/buy-now/{{ product.id }}/${selectedSize}/`;
+    });
   });
-});
 
-// Handle Add to Cart click
-document.querySelector('.btn-cart').addEventListener('click', e=>{
-  if(!selectedSize){
-    e.preventDefault();
-    alert('Please select a size first!');
-  }
-});
+  document.querySelector('.btn-cart')?.addEventListener('click', e => {
+    if (!selectedSize) {
+      e.preventDefault();
+      showSizeError();
+    }
+  });
 
-// Handle Buy Now click
-document.querySelector('.btn-buy').addEventListener('click', e=>{
-  if(!selectedSize){
-    e.preventDefault();
-    alert('Please select a size first!');
-  }
-});
+  document.querySelector('.btn-buy')?.addEventListener('click', e => {
+    if (!selectedSize) {
+      e.preventDefault();
+      showSizeError();
+    }
+  });
 </script>
+
+
 {% endblock %}

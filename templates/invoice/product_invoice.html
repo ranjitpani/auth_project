@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .header, .footer { text-align: center; margin-bottom: 20px; }
+        .section { margin-top: 20px; }
+        .right { text-align: right; }
+    </style>
+</head>
+<body>
+
+<!-- 1️⃣ Invoice Header -->
+<div class="header">
+    <h2>TAX INVOICE</h2>
+    <p>Invoice Date: {{ invoice_date }}</p>
+    <p>Invoice Number: {{ invoice_number }}</p>
+    <p>Order ID: {{ order.id }}</p>
+</div>
+
+<!-- 2️⃣ Seller (Store) Details -->
+<div class="section">
+    <h3>Seller Details</h3>
+
+    {% if store %}
+        <p><b>Store Name:</b> {{ store.name }}</p>
+
+        <p>
+            <b>Address:</b><br>
+            {{ store_address }}
+        </p>
+
+        {% if product_gst_number %}
+            <p><b>GSTIN:</b> {{ product_gst_number }}</p>
+        {% endif %}
+
+    {% else %}
+        <p style="color:red;">Store details not available</p>
+    {% endif %}
+</div>
+
+<!-- 3️⃣ Customer Details -->
+<div class="section">
+    <h3>Customer Details</h3>
+    <p><b>Name:</b> {{ customer.name }}</p>
+    <p><b>Address:</b> {{ customer.address }}</p>
+
+    {% if customer.mobile %}
+        <p><b>Mobile:</b> {{ customer.mobile }}</p>
+    {% endif %}
+
+    {% if customer.email %}
+        <p><b>Email:</b> {{ customer.email }}</p>
+    {% endif %}
+</div>
+
+<!-- 4️⃣ Product Details -->
+<div class="section">
+    <h3>Product Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Sl</th>
+                <th>Product Name</th>
+                <th>SKU</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>GST %</th>
+                <th>GST Amt</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>{{ item.product_name }}</td>
+                <td>
+                    {% if item.product %}
+                        {{ item.product.sku }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }}</td>
+                <td>{{ item.gst_rate }}%</td>
+                <td>{{ item.gst_amount|floatformat:2 }}</td>
+                <td>{{ item.total_with_gst|floatformat:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 5️⃣ Price Summary -->
+<div class="section right">
+    <p>Subtotal: {{ order.subtotal|floatformat:2 }}</p>
+    <p>Total GST: {{ order.total_gst|floatformat:2 }}</p>
+    <h3>Grand Total: {{ order.grand_total|floatformat:2 }}</h3>
+</div>
+
+<!-- 6️⃣ Payment Information -->
+<div class="section">
+    <h3>Payment Information</h3>
+    <p>Method: {{ order.payment_method }}</p>
+    <p>Status: {{ order.payment_status }}</p>
+</div>
+
+<!-- 7️⃣ Delivery Information -->
+<div class="section">
+    <h3>Delivery Information</h3>
+    <p>Delivery Date: {{ order.delivery_date }}</p>
+    <p>Mode: {{ order.delivery_mode }}</p>
+
+    {% if order.delivery_charge %}
+        <p>Delivery Charge: {{ order.delivery_charge|floatformat:2 }}</p>
+    {% endif %}
+</div>
+
+<!-- 8️⃣ Footer -->
+<div class="footer">
+    <p>This is a system generated invoice.</p>
+
+    {% if store and store.return_policy %}
+        <p>Return / Refund Policy: {{ store.return_policy }}</p>
+    {% endif %}
+
+    <p>Thank you for shopping with us!</p>
+</div>
+
+</body>
+</html>

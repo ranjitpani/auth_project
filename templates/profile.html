@@ -1,75 +1,163 @@
 {% extends "base.html" %}
-{% block title %}Profile{% endblock %}
-
+{% block title %}My Profile{% endblock %}
 {% block content %}
-<div style="padding:15px;">
-    <h2>👤 My Profile</h2>
+<style>
+/* ===== PAGE ===== */
+.profile-page{
+  padding:16px;
+  animation:fadeIn .4s ease;
+}
+/* ===== CARD ===== */
+.profile-card{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.08);
+}
+/* ===== HEADER ===== */
+.profile-header{
+  text-align:center;
+  margin-bottom:18px;
+}
+.profile-header h2{
+  font-size:20px;
+  font-weight:800;
+}
+.profile-header p{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+/* ===== FORM ===== */
+.profile-card label{
+  font-weight:700;
+  font-size:13px;
+}
+.profile-card select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  margin-bottom:12px;
+  font-size:14px;
+  background:#f9f9f9;
+  transition:.2s;
+}
+.profile-card select:focus{
+  outline:none;
+  border-color:#2874f0;
+  background:#fff;
+}
+/* ===== SAVE BUTTON ===== */
+.save-btn{
+  width:100%;
+  padding:14px;
+  background:linear-gradient(135deg,#2874f0,#0059d6);
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  margin-top:8px;
+  transition:.25s;
+}
+.save-btn:active{
+  transform:scale(.95);
+}
+/* ===== LOGOUT ===== */
+.logout-btn{
+  width:100%;
+  padding:14px;
+  background:#dc3545;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  margin-top:14px;
+  transition:.25s;
+}
+.logout-btn:active{
+  transform:scale(.95);
+}
+/* ===== ANIMATION ===== */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+/* ===== MOBILE ===== */
+@media(max-width:480px){
+  .profile-card{
+    padding:16px;
+  }
+}
+</style>
 
-    <p><strong>Name:</strong> {{ request.user.username }}</p>
-    <p><strong>Email:</strong> {{ request.user.email }}</p>
+<div class="profile-page">
+  <div class="profile-card">
+    <!-- HEADER -->
+    <div class="profile-header">
+      <h2>👤 My Profile</h2>
+      <p>{{ request.user.username }}<br>{{ request.user.email }}</p>
+    </div>
 
+    <!-- FORM -->
     <form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save</button>
-</form>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="save-btn">
+        💾 Save Location
+      </button>
+    </form>
+
+    <!-- LOGOUT -->
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button class="logout-btn">
+        🛑 Logout
+      </button>
+    </form>
+  </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(function(){
-    $("#id_country").change(function(){
-        var url = "{% url 'ajax_load_states' %}";
-        var countryId = $(this).val();
-        $.ajax({
-            url: url,
-            data: {'country': countryId},
-            success: function(data){
-                $("#id_state").html(data);
-                $("#id_district").html('<option value="">---------</option>');
-                $("#id_block").html('<option value="">---------</option>');
-            }
-        });
-    });
-    $("#id_state").change(function(){
-        var url = "{% url 'ajax_load_districts' %}";
-        var stateId = $(this).val();
-        $.ajax({
-            url: url,
-            data: {'state': stateId},
-            success: function(data){
-                $("#id_district").html(data);
-                $("#id_block").html('<option value="">---------</option>');
-            }
-        });
-    });
-    $("#id_district").change(function(){
-        var url = "{% url 'ajax_load_blocks' %}";
-        var districtId = $(this).val();
-        $.ajax({
-            url: url,
-            data: {'district': districtId},
-            success: function(data){
-                $("#id_block").html(data);
-            }
-        });
-    });
+$("#id_country").change(function(){
+  $.get("{% url 'ajax_load_states' %}", {
+    country: $(this).val()
+  }, function(data){
+    $("#id_state").html(data);
+    $("#id_district").html('');
+    $("#id_block").html('');
+    $("#id_village").html('');
+  });
+});
+
+$("#id_state").change(function(){
+  $.get("{% url 'ajax_load_districts' %}", {
+    state: $(this).val()
+  }, function(data){
+    $("#id_district").html(data);
+    $("#id_block").html('');
+    $("#id_village").html('');
+  });
+});
+
+$("#id_district").change(function(){
+  $.get("{% url 'ajax_load_blocks' %}", {
+    district: $(this).val()
+  }, function(data){
+    $("#id_block").html(data);
+    $("#id_village").html('');
+  });
+});
+
+$("#id_block").change(function(){
+  $.get("{% url 'ajax_load_villages' %}", {
+    block: $(this).val()
+  }, function(data){
+    $("#id_village").html(data);
+  });
 });
 </script>
-
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button style="
-            width:100%;
-            padding:12px;
-            background:#dc3545;
-            color:white;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-        ">
-            Logout
-        </button>
-    </form>
-</div>
-
 {% endblock %}

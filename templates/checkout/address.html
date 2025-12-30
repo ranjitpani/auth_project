@@ -1,134 +1,149 @@
-{% include "checkout/steps.html" with step=1 %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Address</title>
+
 <style>
+* { box-sizing: border-box; }
 body {
-  background: linear-gradient(180deg, #f1f5ff, #ffffff);
+  margin: 0;
+  background: linear-gradient(180deg, #eef2ff, #ffffff);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
-
-/* Card */
 .form-box {
+  width: 100%;
+  min-height: 100vh;
   background: #ffffff;
-  padding: 18px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  padding: 20px 18px 30px;
   animation: slideUp 0.4s ease;
 }
-
-@keyframes slideUp {
-  from {transform: translateY(20px); opacity:0}
-  to {transform: translateY(0); opacity:1}
+@media (min-width: 768px) {
+  .form-box {
+    max-width: 420px;
+    margin: 30px auto;
+    border-radius: 18px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    min-height: auto;
+  }
 }
-
-/* Inputs */
+@keyframes slideUp {
+  from { transform: translateY(25px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 .form-box input,
 .form-box textarea {
   width: 100%;
-  padding: 14px;
-  margin-bottom: 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 15px;
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  font-size: 16px;
   background: #f9fafb;
 }
-
 .form-box input:focus,
 .form-box textarea:focus {
   border-color: #2563eb;
   background: #fff;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.18);
 }
-
-/* Row */
 .row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
-.row input {
-  flex: 1;
+.row input { flex: 1; }
+@media (max-width: 640px) {
+  .row { flex-direction: column; }
 }
-
-/* Buttons */
 .btn {
   width: 100%;
-  padding: 14px;
+  padding: 18px;
   border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 18px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
 }
-
-/* Primary */
 .btn-primary {
   background: linear-gradient(135deg, #2563eb, #1e40af);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(37,99,235,0.35);
+  box-shadow: 0 10px 25px rgba(37,99,235,0.35);
 }
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* Location Button */
 .btn-location {
   background: #eef2ff;
   color: #1e40af;
-  border: 1px dashed #c7d2fe;
-  margin-bottom: 14px;
+  border: 2px dashed #c7d2fe;
+  margin-bottom: 12px;
 }
-
-.btn-location:hover {
-  background: #e0e7ff;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .row {
-    flex-direction: column;
-  }
+.note {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
 }
 </style>
+</head>
+
+<body>
+
+{% include "checkout/steps.html" with step=1 %}
 
 <form method="post" action="{% url 'save_address' %}" class="form-box">
-{% csrf_token %}
+  {% csrf_token %}
 
-<input name="name" placeholder="Full Name"
-       required pattern="[A-Za-z ]+">
+  <input name="name" placeholder="Full Name" required pattern="[A-Za-z ]+">
+  <input name="mobile" placeholder="Mobile Number" required maxlength="10" pattern="[0-9]{10}">
+  <input name="alt_mobile" placeholder="Alternate Mobile (optional)" maxlength="10" pattern="[0-9]{10}">
 
-<input name="mobile" placeholder="Mobile Number"
-       required maxlength="10" pattern="[0-9]{10}">
+  <input name="pincode" id="pincode" placeholder="Pincode" required maxlength="6" pattern="[0-9]{6}">
 
-<input name="alt_mobile" placeholder="Alternate Mobile (optional)"
-       maxlength="10" pattern="[0-9]{10}">
+  <div class="row">
+    <input name="state" id="state" placeholder="State">
+    <input name="district" id="district" placeholder="District">
+  </div>
 
-<input name="pincode" id="pincode"
-       placeholder="Pincode"
-       required maxlength="6" pattern="[0-9]{6}"
-       onkeyup="fetchPincode(this.value)">
+  <input name="block" id="block" placeholder="Village / Block">
 
-<div class="row">
-  <input name="state" id="state" placeholder="State" readonly>
-  <input name="district" id="district" placeholder="District" readonly>
-</div>
+  <textarea name="address" id="address"
+    placeholder="Full Address (House No, Street, Village, Landmark)"
+    rows="4" required></textarea>
 
-<input name="block" id="block" placeholder="Village / Block" readonly>
+  <p class="note">
+    📍 Location is auto-detected and may not be 100% accurate. Please verify before saving.
+  </p>
 
-<textarea name="address" id="address"
-          placeholder="Full Address (AT / PO / Village)"
-          rows="4" required></textarea>
+  <button type="button" class="btn btn-location" onclick="getLocation()">
+    📍 Use My Current Location
+  </button>
 
-<button type="button" class="btn btn-location" onclick="getLocation()">
-📍 Use My Current Location
-</button>
-
-<button type="submit" class="btn btn-primary">
-Save & Continue →
-</button>
+  <button type="submit" class="btn btn-primary">
+    Save & Continue →
+  </button>
 </form>
+
 <script>
-function getLocation(){
-  if (!navigator.geolocation){
+/* -------- PINCODE AUTO FILL (INDIA MOST ACCURATE) -------- */
+document.getElementById("pincode").addEventListener("blur", function () {
+  const pin = this.value;
+  if (pin.length !== 6) return;
+
+  fetch(`https://api.postalpincode.in/pincode/${pin}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data[0].Status !== "Success") return;
+      const p = data[0].PostOffice[0];
+
+      state.value = p.State || "";
+      district.value = p.District || "";
+      block.value = p.Block || p.Name || "";
+    });
+});
+
+/* -------- LOCATION AUTO FILL (SUGGESTION ONLY) -------- */
+function getLocation() {
+  if (!navigator.geolocation) {
     alert("Location not supported");
     return;
   }
@@ -138,71 +153,34 @@ function getLocation(){
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
 
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=en`)
-      .then(res => res.json())
-      .then(data => {
-        if(!data.address) return;
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&zoom=18`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.address) return;
+          const a = data.address;
 
-        const a = data.address;
+          state.value = a.state || state.value;
+          district.value = a.state_district || a.county || district.value;
+          block.value = a.village || a.suburb || a.town || block.value;
 
-        /* -------- SMART FALLBACKS -------- */
-        const house =
-          a.house_number || "";
+          if (a.postcode) pincode.value = a.postcode;
 
-        const road =
-          a.road || a.residential || "";
-
-        const village =
-          a.village ||
-          a.hamlet ||
-          a.suburb ||
-          a.town ||
-          a.city ||
-          "";
-
-        const post =
-          a.post_office ||
-          a.village ||
-          a.hamlet ||
-          "";
-
-        const block =
-          a.county ||
-          a.subdistrict ||
-          a.town ||
-          "";
-
-        const district =
-          a.state_district ||   // ✅ correct district (Khordha)
-          a.district ||
-          "";
-
-        const state = a.state || "";
-        const country = a.country || "";
-        const pincode = a.postcode || "";
-
-        /* -------- ADDRESS FORMAT -------- */
-        const addressText =
-`AT: ${house ? house + ", " : ""}${road}
-PO: ${post}
-Village: ${village}
-Block: ${block}
-District: ${district}
-State: ${state}
-Country: ${country}
-Pincode: ${pincode}`;
-
-        document.getElementById("address").value = addressText;
-        document.getElementById("state").value = state;
-        document.getElementById("district").value = district;
-        document.getElementById("block").value = village || block;
-
-        if(pincode){
-          document.getElementById("pincode").value = pincode;
-        }
-      });
+          address.value =
+`${a.house_number || ""}
+${a.road || ""}
+${a.suburb || ""}
+${a.village || a.town || ""}`.trim();
+        });
     },
-    () => alert("Location permission denied")
+    () => alert("Location permission denied"),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
   );
 }
 </script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+<h2>Tax Invoice</h2>
+
+<p><strong>Invoice Date:</strong> {{ order.created_at }}</p>
+
+<table border="1" width="100%" cellpadding="8">
+<tr>
+  <th>Product</th>
+  <th>Qty</th>
+  <th>Price</th>
+  <th>GST</th>
+  <th>Total</th>
+</tr>
+
+{% for item in items %}
+<tr>
+  <td>
+    {{ item.product.name }}<br>
+    <small>GSTIN: {{ item.product.gst_number }}</small>
+  </td>
+  <td>{{ item.quantity }}</td>
+  <td>₹{{ item.base_price }}</td>
+  <td>{{ item.gst_rate }}% (₹{{ item.gst_amount }})</td>
+  <td>₹{{ item.total_price }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>GST Total: ₹{{ order.gst_total }}</h3>
+<h2>Grand Total: ₹{{ order.total_amount }}</h2>
+
+<a href="{% url 'invoice_pdf' order.id %}">Download Invoice (PDF)</a>

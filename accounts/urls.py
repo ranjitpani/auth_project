@@ -5,7 +5,7 @@ from .views import (
     home, cart, cart_history, location, profile,
     load_states, load_districts, load_blocks, store_detail,
     product_detail, add_to_cart, buy_now , remove_from_cart,update_cart_quantity,increase_qty,decrease_qty,
-     place_order,live_search,checkout_address,checkout_payment,checkout_summary,save_address,change_address,edit_address # <-- new views
+     place_order,live_search,checkout_address,checkout_payment,checkout_summary,save_address,change_address,edit_address,cancel_order,order_detail,request_order_action,ajax_load_villages,download_invoice,product_invoice # <-- new views
 
 )
 from accounts.views import create_superuser
@@ -56,4 +56,18 @@ path('checkout/payment/', checkout_payment, name='checkout_payment'),
 path('checkout/save-address/', save_address, name='save_address'),
 path('checkout/change-address/', change_address, name='change_address'),
  path('checkout/edit-address/<int:address_id>/', edit_address, name='edit_address'),
+ path('order/<int:order_id>/cancel/', cancel_order, name='cancel_order'),
+ path('order/<int:order_id>/',order_detail, name='order_detail'),
+ path('order-action/<int:item_id>/<str:action>/',request_order_action, name='request_order_action'),
+ path('ajax/load-villages/', ajax_load_villages, name='ajax_load_villages'),
+ path(
+        "order/<int:order_id>/invoice/",
+       download_invoice,
+        name="download_invoice"
+    ),
+path(
+    "invoice/product/<int:item_id>/",
+    product_invoice,
+    name="product_invoice"
+),    
 ]

@@ -1,225 +1,163 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Home{% endblock %}
+
 {% block content %}
 <style>
-*{box-sizing:border-box}
-a{ text-decoration:none; color:inherit }
-body{
-    margin:0;
-    font-family:'Poppins',sans-serif;
-    background:linear-gradient(180deg,#eef4ff,#ffffff);
-    overflow-x:hidden;
-}
+*{box-sizing:border-box;margin:0;padding:0;}
+a{text-decoration:none;color:inherit;}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(180deg,#eef4ff,#ffffff);overflow-x:hidden;transition:all .3s;}
+
 /* ================= STICKY TOP ================= */
 .sticky-top-bar{
-    position:sticky;
-    top:0;
-    z-index:1000;
-    background:#fff;
-    padding:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+    position:sticky;top:0;z-index:1000;
+    background:#fff;padding:10px;
+    box-shadow:0 2px 12px rgba(0,0,0,.12);
+    display:flex;flex-direction:column;gap:10px;
+    transition:all .3s;
 }
+
 /* ================= SEARCH ================= */
-.search-wrapper{position:relative}
 .search-container{
-    display:flex;
-    gap:8px;
-    width:100%;
+    display:flex;gap:8px;width:100%;max-width:100vw;overflow:hidden;
 }
 .search-container input{
-    flex:1;
-    min-width:0;
-    padding:8px 10px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:14px;
+    flex:1;padding:8px 10px;border-radius:8px;border:1px solid #ccc;font-size:14px;
+    min-width:0;transition:all .3s;
+}
+.search-container input:focus{
+    border-color:#007bff;box-shadow:0 0 5px rgba(0,123,255,.5);outline:none;
 }
 .search-container button{
-    padding:8px 14px;
-    border:none;
-    border-radius:8px;
-    background:#007bff;
-    color:#fff;
-    font-size:16px;
+    padding:8px 14px;border:none;border-radius:8px;background:#007bff;color:#fff;
+    cursor:pointer;transition:all .3s;
 }
-/* ================= LIVE SEARCH ================= */
-.live-search-box{
-    position:absolute;
-    top:46px;
-    left:0;
-    right:0;
-    background:#fff;
-    border-radius:12px;
-    box-shadow:0 4px 20px rgba(0,0,0,.15);
-    display:none;
-    z-index:2000;
-    max-height:300px;
-    overflow-y:auto;
+.search-container button:hover{
+    background:#0056b3;
 }
-.live-item{
-    display:flex;
-    gap:10px;
-    padding:10px;
-    align-items:center;
-    border-bottom:1px solid #eee;
-}
-.live-item img{
-    width:40px;
-    height:40px;
-    border-radius:8px;
-}
-.live-item:hover{background:#f2f7ff}
-/* ================= CATEGORY ================= */
+
+/* ================= CATEGORY BAR ================= */
 .category-bar{
-    display:flex;
-    gap:14px;
-    overflow-x:auto;
-    padding:6px 4px;
+    display:flex;gap:12px;overflow-x:auto;padding:6px 4px;position:relative;max-width:100vw;
+    scroll-behavior:smooth;
 }
-.category-bar::-webkit-scrollbar{height:5px}
-.category-bar::-webkit-scrollbar-thumb{
-    background:#007bff;
-    border-radius:4px;
-}
+.category-bar::-webkit-scrollbar{display:none;}
 .category-item{
-    min-width:70px;
-    text-align:center;
-    font-size:13px;
+    min-width:70px;text-align:center;font-size:13px;padding-bottom:6px;
+    position:relative;cursor:pointer;flex-shrink:0;transition:all .3s;
 }
+/* .category-item img{
+    width:42px;height:42px;border-radius:50%;margin:0 auto 4px;display:block;
+    transition:transform .3s, box-shadow .3s;
+} */
 .category-item img{
     width:42px;
     height:42px;
     border-radius:50%;
-    display:block;
     margin:0 auto 4px;
-    transition:.3s;
+    display:block;
+    transition: all 0.3s ease;
 }
-.category-bar.shrink img{
-    width:26px;
-    height:26px;
+
+.category-item:hover img{
+    transform:scale(1.1);
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
 }
+
+.category-bar.shrink .category-item img{
+    width:0px;   /* 0 na kari, chhoto size de */
+    height:0px;
+    margin-bottom:0px;
+}
+/* ===== UNDERLINE ===== */
+.category-item::after{
+    content:"";position:absolute;left:50%;bottom:0;width:0;height:3px;background:#007bff;border-radius:6px;transform:translateX(-50%);transition:all .3s;
+}
+.category-item.active::after{width:100%;}
+.category-item.active{color:#007bff;font-weight:600;}
+.category-bar.shrink img{width:28px;height:28px;}
+
 /* ================= STORES ================= */
-.store-title{
-    padding:10px;
-    font-size:18px;
-    font-weight:600;
-}
+.store-title{padding:10px;font-size:18px;font-weight:600;}
 .store-container{
-    display:flex;
-    gap:12px;
-    overflow-x:auto;
-    padding:10px;
-    scroll-snap-type:x mandatory;
+    display:flex;gap:12px;overflow-x:auto;padding:10px;max-width:100vw;scroll-behavior:smooth;
 }
+.store-container::-webkit-scrollbar{display:none;}
 .store-card{
-    flex:0 0 120px;
-    scroll-snap-align:start;
-    background:#fff;
-    border-radius:12px;
-    padding:10px;
-    text-align:center;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
+    flex:0 0 120px;background:#fff;border-radius:12px;padding:10px;
+    text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.08);transition:all .3s;
 }
-.store-card img{
-    width:50px;
-    height:50px;
-    border-radius:50%;
-    margin-bottom:5px;
+.store-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
 }
-.store-card h4{
-    margin:0;
-    font-size:14px;
-    font-weight:500;
-}
+.store-card img{width:50px;height:50px;border-radius:50%;object-fit:cover;transition:all .3s;}
+.store-card h4{font-size:14px;margin:6px 0 0;}
+
 /* ================= PRODUCTS ================= */
-.product-title{
-    padding:10px;
-    font-size:18px;
-    font-weight:600;
-}
+.product-title{padding:10px;font-size:18px;font-weight:600;}
 .container-flex{
-    display:flex;
-    gap:12px;
-    overflow-x:auto;
-    padding:10px;
-    scroll-snap-type:x mandatory;
+    display:flex;gap:12px;overflow-x:auto;padding:10px;max-width:100vw;scroll-behavior:smooth;
 }
+.container-flex::-webkit-scrollbar{display:none;}
 .product-card{
-    flex:0 0 160px;
-    scroll-snap-align:start;
-    background:#fff;
-    border-radius:12px;
-    padding:10px;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
+    flex:0 0 160px;background:#fff;border-radius:12px;padding:10px;
+    box-shadow:0 3px 12px rgba(0,0,0,.08);transition:all .3s;
 }
-.product-card img{
-    width:100%;
-    height:120px;
-    object-fit:cover;
-    border-radius:10px;
+.product-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
 }
-.product-card h4{
-    margin:6px 0;
-    font-size:14px;
-    font-weight:500;
+.product-card img{width:100%;height:120px;object-fit:cover;border-radius:10px;transition:all .3s;}
+.product-card img:hover{
+    transform:scale(1.05);
 }
+.product-card h4{font-size:14px;margin:6px 0;}
+
 /* ================= PRICE ================= */
-.price-row{
-    font-size:13px;
-    display:flex;
-    gap:6px;
-    align-items:center;
-    flex-wrap:wrap;
+.price-row{font-size:13px;display:flex;gap:6px;flex-wrap:wrap;}
+.old-price{text-decoration:line-through;color:#888;}
+.new-price{font-weight:600;}
+.off-badge{background:#35e544;color:#fff;font-size:11px;padding:2px 6px;border-radius:6px;}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+    .store-card{flex:0 0 100px;padding:8px;}
+    .product-card{flex:0 0 140px;padding:8px;}
+    .category-item{min-width:60px;}
+    .category-item img{width:36px;height:36px;}
+    .product-card img{height:100px;}
 }
-.old-price{
-    text-decoration:line-through;
-    color:#888;
-}
-.new-price{
-    font-weight:600;
-}
-.off-badge{
-    background:#35e544;
-    color:#fff;
-    font-size:11px;
-    padding:2px 6px;
-    border-radius:6px;
+@media(max-width:480px){
+    .store-card{flex:0 0 90px;padding:6px;}
+    .product-card{flex:0 0 120px;padding:6px;}
+    .category-item{min-width:55px;font-size:12px;}
+    .category-item img{width:32px;height:32px;}
+    .product-card img{height:90px;}
 }
 </style>
 
 <!-- ================= TOP BAR ================= -->
 <div class="sticky-top-bar">
 <form method="get" action="{% url 'home' %}">
-<div class="search-wrapper">
-    <div class="search-container">
-        <input type="text" name="product_q" placeholder="Search product">
-        <input type="text" name="store_q" placeholder="Search store">
-        <button type="submit">🔍</button>
-    </div>
+<div class="search-container">
+    <input type="text" name="product_q" placeholder="Search product">
+    <input type="text" name="store_q" placeholder="Search store">
+    <button type="submit">🔍</button>
 </div>
 </form>
 
 <div id="categoryBar" class="category-bar">
-    <!-- All Category -->
-    <a href="?category=all">
-        <div class="category-item">
-            <i class="fa-solid fa-suitcase"></i>
-            All
-        </div>
-    </a>
+    <a href="?category=all"><div class="category-item" data-cat="all">All</div></a>
     {% for cat in store_categories %}
     <a href="?category={{ cat.id }}">
-        <div class="category-item">
+        <div class="category-item" data-cat="{{ cat.id }}">
             {% if cat.icon %}
                 <img src="{{ cat.icon.url }}">
             {% elif cat.icon_url %}
                 <img src="{{ cat.icon_url }}">
             {% else %}
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg">
+                <img src="https://via.placeholder.com/40">
             {% endif %}
             {{ cat.name }}
         </div>
@@ -252,19 +190,20 @@ body{
 {% for product in products %}
 <div class="product-card">
 <a href="{% url 'product_detail' product.id %}">
+    
     {% if product.image %}
-        <img src="{{ product.image.url }}">
-    {% else %}
-        <img src="{% static 'default_product.jpg' %}">
-    {% endif %}
+    <img src="{{ product.image.url }}">
+{% elif product.images.first %}
+    <img src="{{ product.images.first.image.url }}">
+{% else %}
+    <img src="{% static 'default_product.jpg' %}">
+{% endif %}
     <h4>{{ product.name }}</h4>
     <div class="price-row">
     {% if product.discounted_price %}
         <span class="old-price">₹{{ product.price }}</span>
         <span class="new-price">₹{{ product.discounted_price }}</span>
-        <span class="off-badge">
-            {{ product.discount_percentage }}% OFF
-        </span>
+        <span class="off-badge">{{ product.discount_percentage }}% OFF</span>
     {% else %}
         <span class="new-price">₹{{ product.price }}</span>
     {% endif %}
@@ -276,12 +215,29 @@ body{
 {% endfor %}
 
 <script>
-/* CATEGORY SHRINK */
-window.addEventListener("scroll",()=>{
-    document.getElementById("categoryBar")
-    .classList.toggle("shrink",window.scrollY>80);
+/* ACTIVE CATEGORY UNDERLINE */
+const params = new URLSearchParams(window.location.search);
+const activeCat = params.get("category") || "all";
+document.querySelectorAll(".category-item").forEach(item=>{
+    if(item.dataset.cat === activeCat){
+        item.classList.add("active");
+        item.scrollIntoView({behavior:"smooth",inline:"center"});
+    }
 });
 
-
+/* SHRINK CATEGORY ON SCROLL */
+// window.addEventListener("scroll",()=>{
+//     document.getElementById("categoryBar")
+//     .classList.toggle("shrink",window.scrollY>80);
+// });
+// SHRINK CATEGORY ICON ON SCROLL
+window.addEventListener("scroll", ()=>{
+    const catBar = document.getElementById("categoryBar");
+    if(window.scrollY > 80){
+        catBar.classList.add("shrink");
+    }else{
+        catBar.classList.remove("shrink");
+    }
+});
 </script>
 {% endblock %}

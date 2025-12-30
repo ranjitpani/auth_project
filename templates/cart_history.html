@@ -1,6 +1,183 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block content %}
-<h1>Cart History Page</h1>
-<p>Your past orders will appear here.</p>
+
+<style>
+/* ===== GLOBAL ===== */
+.orders-container {
+  padding: 12px;
+}
+.order-card {
+  background: #ffffff;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  animation: fadeUp .5s ease;
+}
+@keyframes fadeUp {
+  from {opacity:0; transform:translateY(15px);}
+  to {opacity:1; transform:translateY(0);}
+}
+
+/* ===== ORDER HEADER ===== */
+.order-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.order-id {
+  font-weight:700;
+  font-size:16px;
+}
+.status-badge {
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  color:#fff;
+}
+.status-delivered {background:#28a745;}
+.status-pending {background:#ffc107;color:#000;}
+.status-cancelled {background:#dc3545;}
+.status-packed {background:#e521e2;}
+.status-shipped {background:#28a745;}
+.status-returned {background:#ee2112;}
+.status-refunded {background:#f2250f;}
+.status-exchanged {background:#e13b16;}
+/* ===== PRODUCT ===== */
+.product-row {
+  display:flex;
+  align-items:center;
+  margin-top:12px;
+}
+.product-row img {
+  width:55px;
+  height:55px;
+  object-fit:cover;
+  border-radius:10px;
+  margin-right:12px;
+}
+.product-info {
+  flex:1;
+  font-size:14px;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-links a {
+  display:inline-block;
+  margin-top:6px;
+  margin-right:6px;
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:6px;
+  text-decoration:none;
+  color:#007bff;
+  background:#e9f2ff;
+}
+
+/* ===== REQUEST STATUS ===== */
+.request-status {
+  margin-top:6px;
+  font-size:12px;
+  font-weight:600;
+}
+.pending {color:orange;}
+.approved {color:green;}
+.rejected {color:red;}
+
+/* ===== CANCEL BUTTON ===== */
+.cancel-btn {
+  margin-top:10px;
+  background:#dc3545;
+  color:#fff;
+  padding:8px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+}
+.cancel-btn:hover {
+  background:#b52a37;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:480px){
+  .order-card{padding:12px;}
+}
+</style>
+
+<div class="orders-container">
+<h2 style="margin-bottom:14px;">📦 My Orders</h2>
+
+{% for order in orders %}
+<a href="{% url 'order_detail' order.id %}" style="text-decoration:none;color:inherit;">
+<div class="order-card">
+
+  <!-- ORDER HEADER -->
+  <div class="order-header">
+    <div class="order-id">Order #{{ order.id }}</div>
+    <div class="status-badge status-{{ order.status }}">
+      {{ order.get_status_display }}
+    </div>
+  </div>
+
+  <div style="font-size:13px;margin-top:6px; color: #28a745;">
+    💳 {{ order.get_payment_method_display }} |
+    💰 ₹ {{ order.total_amount }}
+  </div>
+
+  <hr>
+
+  <!-- PRODUCTS -->
+  {% for item in order.items.all %}
+  <div class="product-row">
+    {% if item.product %}
+    {% if item.product.image %}
+        <img src="{{ item.product.image.url }}">
+    {% elif item.product.images.first %}
+        <img src="{{ item.product.images.first.image.url }}">
+    {% else %}
+        <img src="{% static 'default_product.jpg' %}">
+    {% endif %}
+{% else %}
+    <img src="{% static 'default_product.jpg' %}">
+{% endif %}
+
+    <div class="product-info">
+      <b>{{ item.product_name }}</b>
+      {% if item.size %}({{ item.size }}){% endif %}<br>
+      Qty: {{ item.quantity }} × ₹{{ item.price }}
+
+      {% if order.status == "delivered" %}
+        {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
+        <div class="action-links">
+          <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
+          <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
+          <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
+        </div>
+        {% else %}
+        <div class="request-status {{ item.request_status }}">
+          {{ item.request_status|capfirst }}
+          ({{ item.request_date }})
+        </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if order.status == "pending" %}
+  <form method="POST" action="{% url 'cancel_order' order.id %}">
+    {% csrf_token %}
+    <button class="cancel-btn">Cancel Order</button>
+  </form>
+  {% endif %}
+
+</div>
+</a>
+{% empty %}
+<p>No orders yet.</p>
+{% endfor %}
+</div>
+
 {% endblock %}
