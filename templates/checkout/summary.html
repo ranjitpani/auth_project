@@ -118,9 +118,9 @@ h4{
     <b>Village/Block:</b> {{ address.block }}
   </div>
   <div style="margin-top:8px;">📞 {{ address.mobile }}</div>
-  <a class="change-link" href="{% url 'checkout_address' %}">
+  <a class="change-link" href="{% url 'edit_address' address.id %}">
     Change / Edit Address →
-  </a>
+</a>
 </div>
 
 <h4>Products</h4>

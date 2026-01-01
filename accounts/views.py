@@ -335,7 +335,10 @@ def home(request):
     )
 
     if product_q:
-        products = products.filter(name__icontains=product_q)
+        products = products.filter(
+            Q(name__icontains=product_q) |
+            Q(category__name__icontains=product_q)
+    )
 
     # ================= PRODUCTS BY PRODUCT CATEGORY =================
     products_by_category = defaultdict(list)
@@ -462,10 +465,12 @@ from django.shortcuts import get_object_or_404, render
 
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
-     # =========================
-    # AVAILABLE COLORS (stock > 0)
-    # =========================
-  
+    viewed = request.session.get("recently_viewed", [])
+
+    if product.id not in viewed:
+        viewed.insert(0, product.id)
+
+    request.session["recently_viewed"] = viewed[:10]  # max 10 
     # =========================
     # AVAILABLE SIZES (stock > 0)
     # =========================
@@ -549,27 +554,179 @@ def add_to_cart(request, product_id, size):
 
     messages.success(request, "Product added to cart")
     return redirect("cart")
+# @login_required
+# def cart(request):
+#     cart = request.session.get('cart', {})
+#     cart_items = []
+#     cart_total = 0       # discounted total
+#     cart_subtotal = 0    # original total
+#     product_ids_in_cart = [item['product'].id for item in cart_items]
+#     for key, qty in cart.items():
+#         try:
+#             product_id, size = key.split('_')
+#             product = get_object_or_404(Product, id=product_id)
+#             stock = ProductStock.objects.get(product=product, size=size)
+#             # choose price (discounted > normal)
+#             price = product.discounted_price if product.discounted_price else product.price
+#             # calculate item total
+#             item_total = price * qty
+#             cart_total += item_total
+#             cart_subtotal += product.price * qty  # original total
+#             # calculate % OFF
+#             off_percent = 0
+#             if product.discounted_price and product.price:
+#                 off_percent = round((product.price - product.discounted_price) / product.price * 100)
+#             cart_items.append({
+#                 'product': product,
+#                 'size': size,
+#                 'quantity': qty,
+#                 'stock': stock.stock,
+#                 'price': price,
+#                 'item_total': item_total,
+#                 'off_percent': off_percent,
+#             })
+
+#             product_ids_in_cart.append(product.id)            
+#         except ProductStock.DoesNotExist:
+#             continue
+#     related_products = []
+
+#     if cart_items:
+#         first_product = cart_items[0]['product']
+
+#         # 1️⃣ Similar category OR name
+#         qs = Product.objects.filter(
+#             Q(category=first_product.category) |
+#             Q(name__icontains=first_product.name.split()[0])
+#         ).exclude(
+#             id__in=product_ids_in_cart
+#         )
+
+#         related_products = list(qs)
+
+#         # 2️⃣ If less products, add random
+#         if len(related_products) < 6:
+#             extra = list(
+#                 Product.objects.exclude(
+#                     id__in=product_ids_in_cart
+#                 ).exclude(
+#                     id__in=[p.id for p in related_products]
+#                 )
+#             )
+#             related_products += extra
+
+#         # 3️⃣ Shuffle + limit
+#         random.shuffle(related_products)
+#         related_products = related_products[:6]
+
+#     context = {
+#         "cart_items": cart_items,
+#         "cart_total": cart_total,
+#         "cart_subtotal": cart_subtotal,
+#         "related_products": related_products,
+#     }
+
+#     return render(request, "cart.html", context)  
+# 
+# @login_required
+# def cart(request):
+#     cart = request.session.get('cart', {})
+#     cart_items = []
+#     cart_total = 0
+#     cart_subtotal = 0
+#     product_ids_in_cart = []
+
+#     for key, qty in cart.items():
+#         try:
+#             product_id, size = key.split('_')
+#             product = get_object_or_404(Product, id=product_id)
+#             stock = ProductStock.objects.get(product=product, size=size)
+
+#             price = product.discounted_price or product.price
+#             item_total = price * qty
+
+#             cart_total += item_total
+#             cart_subtotal += product.price * qty
+
+#             off_percent = 0
+#             if product.discounted_price:
+#                 off_percent = round(
+#                     (product.price - product.discounted_price) / product.price * 100
+#                 )
+
+#             cart_items.append({
+#                 'product': product,
+#                 'size': size,
+#                 'quantity': qty,
+#                 'stock': stock.stock,
+#                 'price': price,
+#                 'item_total': item_total,
+#                 'off_percent': off_percent,
+#             })
+
+#             product_ids_in_cart.append(product.id)
+
+#         except ProductStock.DoesNotExist:
+#             continue
+
+#     # ================= RELATED PRODUCTS =================
+#     related_products = []
+
+#     if cart_items:
+#         first_product = cart_items[0]['product']
+
+#         qs = Product.objects.filter(
+#             Q(category=first_product.category) |
+#             Q(name__icontains=first_product.name.split()[0])
+#         ).exclude(id__in=product_ids_in_cart)
+
+#         related_products = list(qs)
+
+#         if len(related_products) < 6:
+#             extra = list(
+#                 Product.objects.exclude(id__in=product_ids_in_cart)
+#                 .exclude(id__in=[p.id for p in related_products])
+#             )
+#             related_products += extra
+
+#         random.shuffle(related_products)
+#         related_products = related_products[:6]
+
+#     context = {
+#         "cart_items": cart_items,
+#         "cart_total": cart_total,
+#         "cart_subtotal": cart_subtotal,
+#         "related_products": related_products,
+#     }
+
+#     return render(request, "cart.html", context)      
+   
 @login_required
 def cart(request):
     cart = request.session.get('cart', {})
     cart_items = []
-    cart_total = 0       # discounted total
-    cart_subtotal = 0    # original total
+    cart_total = 0
+    cart_subtotal = 0
+    product_ids_in_cart = []
+
     for key, qty in cart.items():
         try:
             product_id, size = key.split('_')
             product = get_object_or_404(Product, id=product_id)
             stock = ProductStock.objects.get(product=product, size=size)
-            # choose price (discounted > normal)
-            price = product.discounted_price if product.discounted_price else product.price
-            # calculate item total
+
+            price = product.discounted_price or product.price
             item_total = price * qty
+
             cart_total += item_total
-            cart_subtotal += product.price * qty  # original total
-            # calculate % OFF
+            cart_subtotal += product.price * qty
+
             off_percent = 0
-            if product.discounted_price and product.price:
-                off_percent = round((product.price - product.discounted_price) / product.price * 100)
+            if product.discounted_price:
+                off_percent = round(
+                    (product.price - product.discounted_price) / product.price * 100
+                )
+
             cart_items.append({
                 'product': product,
                 'size': size,
@@ -579,15 +736,62 @@ def cart(request):
                 'item_total': item_total,
                 'off_percent': off_percent,
             })
+
+            product_ids_in_cart.append(product.id)
+
         except ProductStock.DoesNotExist:
             continue
-    return render(request, 'cart.html', {
-        'cart_items': cart_items,
-        'cart_total': cart_total,      # discounted total
-        'cart_subtotal': cart_subtotal # original total
-    })
 
+    # =========================
+    # 🔥 RELATED / EMPTY CART PRODUCTS
+    # =========================
+    related_products = []
+    empty_cart_products = []
 
+    # 🟢 Cart has items → related products
+    if cart_items:
+        first_product = cart_items[0]['product']
+
+        qs = Product.objects.filter(
+            Q(category=first_product.category) |
+            Q(name__icontains=first_product.name.split()[0])
+        ).exclude(id__in=product_ids_in_cart)
+
+        related_products = list(qs)
+
+        if len(related_products) < 6:
+            extra = list(
+                Product.objects.exclude(id__in=product_ids_in_cart)
+                .exclude(id__in=[p.id for p in related_products])
+            )
+            related_products += extra
+
+        random.shuffle(related_products)
+        related_products = related_products[:6]
+
+    # 🔴 Cart empty → recently viewed / random
+    else:
+        viewed_ids = request.session.get("recently_viewed", [])
+
+        if viewed_ids:
+            empty_cart_products = list(
+                Product.objects.filter(id__in=viewed_ids, is_available=True)[:6]
+            )
+
+        if not empty_cart_products:
+            empty_cart_products = list(
+                Product.objects.filter(is_available=True).order_by("?")[:6]
+            )
+
+    context = {
+        "cart_items": cart_items,
+        "cart_total": cart_total,
+        "cart_subtotal": cart_subtotal,
+        "related_products": related_products,
+        "empty_cart_products": empty_cart_products,
+    }
+
+    return render(request, "cart.html", context)
 
 from django.db import transaction
 from .models import ProductStock
@@ -859,44 +1063,90 @@ def buy_now(request, product_id, size):
 def checkout_address(request):
     if request.GET.get('from') == 'cart':
         request.session['checkout_type'] = 'cart'
-        request.session.pop('buy_now', None)  # ✅ only here clear
+        request.session.pop('buy_now', None)
 
-    addresses = UserAddress.objects.filter(user=request.user)
-    return render(request, 'checkout/address.html', {
-        'addresses': addresses
-    })
+    # ✅ check default address
+    default_address = UserAddress.objects.filter(
+        user=request.user,
+        is_default=True
+    ).first()
+
+    # 🔥 IF address already exists → skip address page
+    if default_address:
+        return redirect('checkout_summary')
+
+    # ❌ No address yet → show address form
+    return render(request, 'checkout/address.html')
 
 
+# @login_required
+# def save_address(request):
+#     if request.method == 'POST':
+
+#         # 🔴 Make all old addresses non-default
+#         UserAddress.objects.filter(
+#             user=request.user,
+#             is_default=True
+#         ).update(is_default=False)
+
+#         # ✅ Save new address as default
+#         UserAddress.objects.create(
+#             user=request.user,
+#             name=request.POST.get('name'),
+#             mobile=request.POST.get('mobile'),
+#             alt_mobile=request.POST.get('alt_mobile'),
+#             pincode=request.POST.get('pincode'),
+#             state=request.POST.get('state'),
+#             district=request.POST.get('district'),
+#             block=request.POST.get('block'),
+#             address=request.POST.get('address'),
+#             is_default=True
+#         )
+
+#         # ✅ Ensure checkout flow
+#         if 'checkout_type' not in request.session:
+#             request.session['checkout_type'] = 'cart'
+
+#         return redirect('checkout_summary')
 @login_required
 def save_address(request):
     if request.method == 'POST':
 
-        # 🔴 Make all old addresses non-default
+        # 🔥 If address already exists → just mark default
+        existing = UserAddress.objects.filter(
+            user=request.user,
+            mobile=request.POST.get('mobile'),
+            pincode=request.POST.get('pincode'),
+            address=request.POST.get('address')
+        ).first()
+
+        # make all old addresses non-default
         UserAddress.objects.filter(
             user=request.user,
             is_default=True
         ).update(is_default=False)
 
-        # ✅ Save new address as default
-        UserAddress.objects.create(
-            user=request.user,
-            name=request.POST.get('name'),
-            mobile=request.POST.get('mobile'),
-            alt_mobile=request.POST.get('alt_mobile'),
-            pincode=request.POST.get('pincode'),
-            state=request.POST.get('state'),
-            district=request.POST.get('district'),
-            block=request.POST.get('block'),
-            address=request.POST.get('address'),
-            is_default=True
-        )
+        if existing:
+            existing.is_default = True
+            existing.save()
+        else:
+            UserAddress.objects.create(
+                user=request.user,
+                name=request.POST.get('name'),
+                mobile=request.POST.get('mobile'),
+                alt_mobile=request.POST.get('alt_mobile'),
+                pincode=request.POST.get('pincode'),
+                state=request.POST.get('state'),
+                district=request.POST.get('district'),
+                block=request.POST.get('block'),
+                address=request.POST.get('address'),
+                is_default=True
+            )
 
-        # ✅ Ensure checkout flow
         if 'checkout_type' not in request.session:
             request.session['checkout_type'] = 'cart'
 
         return redirect('checkout_summary')
-
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required

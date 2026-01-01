@@ -96,6 +96,9 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
         ('Pricing', {'fields': ('price','discounted_price','delivery_charge')}),
         ('GST Details', {'fields': ('gst_rate','gst_number')}),
         ('Rating', {'fields': ('rating',)}),
+        ("Description", {
+            "fields": ("description",)
+        }),
     )
 
 

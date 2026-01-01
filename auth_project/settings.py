@@ -109,8 +109,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Email
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "Village Store <onboarding@village-store.onrender.com>"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# DEFAULT_FROM_EMAIL = "Village Store <onboarding@village-store.onrender.com>"
+DEFAULT_FROM_EMAIL = "hello@mofycart.shop"
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
 
 # Login/Logout
