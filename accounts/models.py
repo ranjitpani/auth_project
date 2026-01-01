@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-
+from cloudinary.models import CloudinaryField
 # ---------------------------
 # Custom User Manager
 # ---------------------------
@@ -79,7 +79,7 @@ class Village(models.Model):
 # ---------------------------
 class StoreCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    icon = models.ImageField(upload_to='store_category_icons/', blank=True, null=True)
+    icon = CloudinaryField('icon', blank=True, null=True)
     icon_url = models.URLField(null=True, blank=True) 
     def __str__(self):
         return self.name    
@@ -89,7 +89,8 @@ class StoreCategory(models.Model):
 # ---------------------------
 class Store(models.Model):
     name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='store_images/', null=True, blank=True)
+    # image = models.ImageField(upload_to='store_images/', null=True, blank=True)
+    image = CloudinaryField('image', blank=True, null=True)
     details = models.TextField(blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
@@ -155,7 +156,8 @@ class Product(models.Model):
         blank=True,
         null=True
     )
-    image = models.ImageField(upload_to='product_images/', blank=True, null=True)  # local
+    # image = models.ImageField(upload_to='product_images/', blank=True, null=True)  # local
+    image = CloudinaryField('image', blank=True, null=True)
     image_url = models.URLField(blank=True, null=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     discounted_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
@@ -184,7 +186,7 @@ class ProductStock(models.Model):
 # ---------------------------
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='product_images/') 
+    image = CloudinaryField('image', blank=True, null=True)
     def __str__(self):
         return f"{self.product.name} Image"
     
@@ -298,9 +300,12 @@ class OrderItem(models.Model):
     # Request Details
     # =====================
     request_reason = models.TextField(blank=True, null=True)
-    image1 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
-    image2 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
+    # image1 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
+    # image2 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
+    # image3 = models.ImageField(upload_to='order_requests/', blank=True, null=True)
+    image1 = CloudinaryField('image1', blank=True, null=True)
+    image2 = CloudinaryField('image2', blank=True, null=True)
+    image3 = CloudinaryField('image3', blank=True, null=True)
 
     # =====================
     # Payment Details (USED FOR RETURN + REFUND)
