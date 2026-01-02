@@ -134,10 +134,16 @@ body{font-family:'Poppins',sans-serif;}
             {% for product in cat_products %}
             <a href="{% url 'product_detail' product.id %}" style="text-decoration:none; color:inherit;">
                 <div class="product-card">
-                    {% if product.image %}
+                    <!-- {% if product.image %}
                         <img src="{{ product.image.url }}">
                     {% else %}
-                        <img src="{% static 'default_product.jpg' %}">
+                        <img src="{% static 'default_product.jpg' %}"> -->
+                        {% if product.image %}
+    <img src="{{ product.image.url }}">
+{% elif product.images.first %}
+    <img src="{{ product.images.first.image.url }}">
+{% else %}
+    <img src="{% static 'default_product.jpg' %}">
                     {% endif %}
                     <h4>{{ product.name|truncatechars:20 }}</h4>
                     {% if product.discounted_price and product.discounted_price < product.price %}
