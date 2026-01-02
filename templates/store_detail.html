@@ -206,7 +206,7 @@ function renderProducts(products){
         byCategory[cat].forEach(p=>{
             html += `<a href="/product/${p.id}" style="text-decoration:none; color:inherit;">
                 <div class="product-card">
-                    <img src="${p.image}">
+                    <img src="${p.image.startsWith('http') ? p.image : '/media/' + p.image}">
                     <h4>${p.name}</h4>
                     ${p.discounted_price ? `<div class="price-row"><span class="old-price">â‚¹${p.price}</span> <span class="new-price">â‚¹${p.discounted_price}</span> <span class="off-badge">${p.discount_percentage}% off</span></div>` : `<div class="price-row"><span class="new-price">â‚¹${p.price}</span></div>`}
                 </div>
