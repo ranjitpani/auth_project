@@ -93,7 +93,8 @@ body{font-family:'Poppins',sans-serif;}
 .off-badge{background:#00e64d;color:#fff;padding:2px 4px;border-radius:4px;font-size:11px;}
 </style>
 
-<!-- ================= STORE HEADER ================= -->
+
+
 <h2 style="text-align:center;margin:10px 0;">{{ store.name }}</h2>
 <div style="text-align:center;margin:0 auto 15px auto;width:90%; max-width:600px; height:170px; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     {% if store.image %}
@@ -104,9 +105,8 @@ body{font-family:'Poppins',sans-serif;}
 </div>
 <p style="margin-bottom:15px;">{{ store.details }}</p>
 
-<!-- ================= STICKY SEARCH + CATEGORY ================= -->
 <div class="sticky-search-bar">
-    <form class="search-form" id="storeSearchForm" onsubmit="return false;">
+    <form id="storeSearchForm" onsubmit="return false;">
         <input type="text" id="storeSearchInput" placeholder="Search products..." value="{{ search_query }}">
         <button type="button" id="searchBtn">Search</button>
     </form>
@@ -125,7 +125,6 @@ body{font-family:'Poppins',sans-serif;}
 </div>
 <hr>
 
-<!-- ================= PRODUCTS ================= -->
 <div id="productsContainer">
     {% for category, cat_products in products_by_category.items %}
     <div class="category-section" data-category="{{ category|slugify }}">
@@ -136,18 +135,20 @@ body{font-family:'Poppins',sans-serif;}
                 <div class="product-card">
                     {% if product.image %}
                         <img src="{{ product.image.url }}">
+                    {% elif product.images.all %}
+                        <img src="{{ product.images.first.image.url }}">
                     {% else %}
                         <img src="{% static 'default_product.jpg' %}">
                     {% endif %}
                     <h4>{{ product.name|truncatechars:20 }}</h4>
-                    {% if product.discounted_price and product.discounted_price < product.price %}
+                    {% if product.discounted_price %}
                         <div class="price-row">
-                            <span class="old-price">₹ {{ product.price }}</span>
-                            <span class="new-price">₹ {{ product.discounted_price }}</span>
+                            <span class="old-price">₹{{ product.price }}</span>
+                            <span class="new-price">₹{{ product.discounted_price }}</span>
                             <span class="off-badge">{{ product.discount_percentage }}% off</span>
                         </div>
                     {% else %}
-                        <div class="price-row"><span class="new-price">₹ {{ product.price }}</span></div>
+                        <div class="price-row"><span class="new-price">₹{{ product.price }}</span></div>
                     {% endif %}
                 </div>
             </a>
@@ -157,35 +158,21 @@ body{font-family:'Poppins',sans-serif;}
     {% endfor %}
 </div>
 
-<!-- ================= JS ================= -->
 <script>
-// Keep original products HTML to restore
 const originalProductsHTML = document.getElementById("productsContainer").innerHTML;
 const searchInput = document.getElementById("storeSearchInput");
 
-// Show/hide categories
 function showCategory(category){
-    // Clear search input
     searchInput.value = '';
-
     if(category === 'all'){
-        // Show all products
         document.getElementById("productsContainer").innerHTML = originalProductsHTML;
     } else {
-        // Show only selected category
         document.querySelectorAll(".category-section").forEach(section=>{
             section.style.display = (section.dataset.category === category) ? "block" : "none";
         });
     }
 }
 
-// Shrink category icons on scroll
-window.addEventListener("scroll",()=>{
-    let categoryBar = document.getElementById("categoryBar");
-    categoryBar.classList.toggle("shrink", window.scrollY>120);
-});
-
-// Render products from AJAX
 function renderProducts(products){
     const container = document.getElementById("productsContainer");
     container.innerHTML = "";
@@ -204,11 +191,12 @@ function renderProducts(products){
             <h3>${cat}</h3>
             <div class="product-row">`;
         byCategory[cat].forEach(p=>{
+            let img = p.image ? p.image : '/static/default_product.jpg';
             html += `<a href="/product/${p.id}" style="text-decoration:none; color:inherit;">
                 <div class="product-card">
-                    <img src="${p.image ? (p.image.startsWith('http') ? p.image : p.image) : '/static/default_product.jpg'}">
+                    <img src="${img}">
                     <h4>${p.name}</h4>
-                    ${p.discounted_price ? `<div class="price-row"><span class="old-price">â‚¹${p.price}</span> <span class="new-price">â‚¹${p.discounted_price}</span> <span class="off-badge">${p.discount_percentage}% off</span></div>` : `<div class="price-row"><span class="new-price">â‚¹${p.price}</span></div>`}
+                    ${p.discounted_price ? `<div class="price-row"><span class="old-price">₹${p.price}</span> <span class="new-price">₹${p.discounted_price}</span> <span class="off-badge">${p.discount_percentage}% off</span></div>` : `<div class="price-row"><span class="new-price">₹${p.price}</span></div>`}
                 </div>
             </a>`;
         });
@@ -217,11 +205,9 @@ function renderProducts(products){
     }
 }
 
-// AJAX search function
 function performSearch(){
     let q = searchInput.value.trim();
     if(q.length < 2){
-        // Restore original products if search is cleared
         document.getElementById("productsContainer").innerHTML = originalProductsHTML;
         return;
     }
@@ -230,18 +216,11 @@ function performSearch(){
     .then(data => renderProducts(data.products));
 }
 
-// Trigger search on typing
 searchInput.addEventListener("keyup", performSearch);
-
-// Trigger search on Enter key
-searchInput.addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        e.preventDefault();
-        performSearch();
-    }
+searchInput.addEventListener("keypress", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); performSearch(); }
 });
-
-// Optional: search button click
 document.getElementById("searchBtn").addEventListener("click", performSearch);
 </script>
+
 {% endblock %}

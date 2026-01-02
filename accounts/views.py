@@ -430,62 +430,61 @@ from .models import Store, Product
 #         'products_by_category': dict(products_by_category),
 #         'search_query': query,
 #     })
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Q
 from collections import defaultdict
 import random
+from .models import Store, Product
 
 def store_detail(request, id):
     store = get_object_or_404(Store, id=id, is_active=True)
     products = store.products.filter(is_available=True)
-
     query = request.GET.get('q', '').strip()
+
     if query:
         products = products.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query)
         )
 
-    # 🔥 AJAX REQUEST
+    # ===== AJAX REQUEST =====
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         data = []
         for p in products:
+            if p.image:
+                img_url = p.image.url
+            elif p.images.exists():
+                img_url = p.images.first().image.url
+            else:
+                img_url = ""  # Or default image url
+
             data.append({
                 "id": p.id,
                 "name": p.name,
-                "price": p.discounted_price if p.discounted_price else p.price,
-                "discounted_price": p.discounted_price,
-                "discount_percentage": round(
-                    (p.price - p.discounted_price) / p.price * 100
-                ) if p.discounted_price else 0,
-                "image": p.image.url if p.image else "",
+                "price": float(p.price),
+                "discounted_price": float(p.discounted_price) if p.discounted_price else None,
+                "discount_percentage": round((p.price - p.discounted_price) / p.price * 100) if p.discounted_price else 0,
+                "image": img_url,
                 "category": p.category.name if p.category else "Uncategorized",
             })
         return JsonResponse({"products": data})
 
-    # 🔴 NORMAL PAGE LOAD
+    # ===== NORMAL PAGE LOAD =====
     products_by_category = defaultdict(list)
-
     for product in products:
-        category_name = product.category.name if product.category else 'Uncategorized'
-
-        if product.discounted_price and product.discounted_price < product.price:
-            product.discount_percentage = round(
-                (product.price - product.discounted_price) / product.price * 100
-            )
-        else:
-            product.discount_percentage = 0
-
-        products_by_category[category_name].append(product)
+        cat_name = product.category.name if product.category else "Uncategorized"
+        product.discount_percentage = round((product.price - product.discounted_price) / product.price * 100) if product.discounted_price else 0
+        products_by_category[cat_name].append(product)
 
     for cat in products_by_category:
         random.shuffle(products_by_category[cat])
         products_by_category[cat] = products_by_category[cat][:6]
 
-    return render(request, 'store_detail.html', {
-        'store': store,
-        'products_by_category': dict(products_by_category),
-        'search_query': query,
+    return render(request, "store_detail.html", {
+        "store": store,
+        "products_by_category": dict(products_by_category),
+        "search_query": query,
     })
 
 
