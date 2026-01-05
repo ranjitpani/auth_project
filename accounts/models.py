@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from cloudinary.models import CloudinaryField
+from django.conf import settings
 # ---------------------------
 # Custom User Manager
 # ---------------------------
@@ -32,6 +33,7 @@ class CustomUser(AbstractUser):
     district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
     block = models.ForeignKey('Block', on_delete=models.SET_NULL, null=True, blank=True)
     village = models.ForeignKey('Village', on_delete=models.SET_NULL, null=True, blank=True)
+    is_store_owner = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
@@ -88,28 +90,29 @@ class StoreCategory(models.Model):
 # Store Model
 # ---------------------------
 class Store(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="owned_stores",
+        null=True,
+        blank=True
+    )
     name = models.CharField(max_length=255)
-    # image = models.ImageField(upload_to='store_images/', null=True, blank=True)
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, blank=True, null=True
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, blank=True, null=True
+    )
     image = CloudinaryField('image', blank=True, null=True)
     details = models.TextField(blank=True, null=True)
+    gst_number = models.CharField(max_length=20, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
     district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True)
     block = models.ForeignKey(Block, on_delete=models.SET_NULL, null=True, blank=True)
-    village = models.ForeignKey(
-        Village,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-    # category = models.CharField(max_length=100, blank=True, null=True)
-    category = models.ForeignKey(
-    StoreCategory,
-    on_delete=models.SET_NULL,
-    null=True,
-    blank=True,
-    related_name='stores'
-)
+    village = models.ForeignKey(Village, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(StoreCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='stores')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -258,9 +261,16 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255, blank=True, null=True)
+    store_name = models.CharField(max_length=255, blank=True, null=True)
+    category_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
     size = models.CharField(max_length=20, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField()
+    product_image = models.URLField(blank=True, null=True)
     
     # ======================
     # GST Details (Snapshot)
@@ -320,12 +330,22 @@ class OrderItem(models.Model):
     bank_account_number = models.CharField(max_length=50, blank=True, null=True)
     bank_ifsc = models.CharField(max_length=20, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
-
+    
     def save(self, *args, **kwargs):
-        if self.product and not self.product_name:
-            self.product_name = self.product.name
+        if self.product:
+            if not self.product_name:
+                self.product_name = self.product.name
+            if not self.store_name and self.product.store:
+                self.store_name = self.product.store.name
+            if not self.category_name and self.product.category:
+                self.category_name = self.product.category.name
+        # Image snapshot
+            if not self.product_image:
+                try:
+                    self.product_image = self.product.image.url if self.product.image else None
+                except:
+                    self.product_image = None
         super().save(*args, **kwargs)
-
     # =====================
     # GST Calculation
     # =====================
@@ -369,3 +389,21 @@ class ExchangeRequest(OrderItem):
         verbose_name = "Exchange Request"
         verbose_name_plural = "Exchange Requests"  
 
+
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+import random
+
+class EmailOTP(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    @staticmethod
+    def generate_otp():
+        return str(random.randint(100000, 999999))

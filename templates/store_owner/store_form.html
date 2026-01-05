@@ -1,0 +1,121 @@
+{% extends "store_owner/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3>{{ form.instance.pk|yesno:"Edit Store,Add Store" }}</h3>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <hr>
+        <h5>📍 Select Store Location</h5>
+
+        <!-- Search box -->
+        <input type="text" id="searchBox" class="form-control mb-2"
+               placeholder="Search place, village, city, landmark">
+
+        <!-- Map -->
+        <div id="map" style="height: 400px; border-radius: 10px;"></div>
+
+        <button type="submit" class="btn btn-success mt-3">Save</button>
+        <a href="{% url 'store_owner_dashboard' %}" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Leaflet Geocoder (Search) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const latInput = document.getElementById("id_latitude");
+    const lngInput = document.getElementById("id_longitude");
+
+    let defaultLat = 20.5937;
+    let defaultLng = 78.9629;
+    let zoom = 6;
+
+    if (latInput.value && lngInput.value) {
+        defaultLat = parseFloat(latInput.value);
+        defaultLng = parseFloat(lngInput.value);
+        zoom = 14;
+    }
+
+    const map = L.map("map").setView([defaultLat, defaultLng], zoom);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+
+    let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+    // =============================
+    // 📍 YOUR LOCATION BUTTON
+    // =============================
+    const locationControl = L.control({ position: "topright" });
+
+    locationControl.onAdd = function () {
+        const btn = L.DomUtil.create("button", "btn btn-primary");
+        btn.innerHTML = "📍 Your Location";
+        btn.style.padding = "6px 10px";
+        btn.style.cursor = "pointer";
+
+        btn.onclick = function (e) {
+            e.preventDefault();
+
+            if (!navigator.geolocation) {
+                alert("Geolocation not supported");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+
+                    map.setView([lat, lng], 16);
+                    marker.setLatLng([lat, lng]);
+
+                    latInput.value = lat.toFixed(6);
+                    lngInput.value = lng.toFixed(6);
+                },
+                function () {
+                    alert("Unable to fetch your location");
+                }
+            );
+        };
+
+        return btn;
+    };
+
+    locationControl.addTo(map);
+
+    // =============================
+    // Map click
+    // =============================
+    map.on("click", function (e) {
+        marker.setLatLng(e.latlng);
+        latInput.value = e.latlng.lat.toFixed(6);
+        lngInput.value = e.latlng.lng.toFixed(6);
+    });
+
+    // =============================
+    // Marker drag
+    // =============================
+    marker.on("dragend", function () {
+        const pos = marker.getLatLng();
+        latInput.value = pos.lat.toFixed(6);
+        lngInput.value = pos.lng.toFixed(6);
+    });
+
+});
+</script>
+
+{% endblock %}

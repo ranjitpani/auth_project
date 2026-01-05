@@ -16,3 +16,9 @@ class AccountsConfig(AppConfig):
 
     def ready(self):
         post_migrate.connect(create_superuser, sender=self)
+
+from django.apps import AppConfig
+
+class StoreConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'store'        

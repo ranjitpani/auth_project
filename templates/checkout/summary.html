@@ -118,6 +118,9 @@ h4{
     <b>Village/Block:</b> {{ address.block }}
   </div>
   <div style="margin-top:8px;">📞 {{ address.mobile }}</div>
+  {% if address.alt_mobile %}
+  <p><strong>Alternate Mobile:</strong> {{ address.alt_mobile }}</p>
+{% endif %}
   <a class="change-link" href="{% url 'edit_address' address.id %}">
     Change / Edit Address →
 </a>

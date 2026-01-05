@@ -117,31 +117,56 @@ class StoreCategoryAdmin(admin.ModelAdmin):
 
 # ================== Orders ==================
 # ================== Orders ==================
+# from django.utils.html import format_html
+
+# class OrderItemInline(admin.TabularInline):
+#     model = OrderItem
+#     extra = 0
+#     readonly_fields = ('product_image',)
+
+#     def product_image(self, obj):
+#         """
+#         Show the product image in admin. If product is deleted,
+#         try to show the image from OrderItem itself.
+#         """
+#         if obj.product and obj.product.image:
+#             return format_html('<img src="{}" width="50" />', obj.product.image.url)
+#         elif hasattr(obj, 'product_image') and obj.product_image:
+#             return format_html('<img src="{}" width="50" />', obj.product_image.url)
+#         return "No Image"
+
+#     product_image.short_description = "Product Image"
 from django.utils.html import format_html
+from django.contrib import admin
+from .models import OrderItem
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('product_image',)
+    readonly_fields = ('product_image_preview',)
 
-    def product_image(self, obj):
-        """
-        Show the product image in admin. If product is deleted,
-        try to show the image from OrderItem itself.
-        """
-        if obj.product and obj.product.image:
-            return format_html('<img src="{}" width="50" />', obj.product.image.url)
-        elif hasattr(obj, 'product_image') and obj.product_image:
-            return format_html('<img src="{}" width="50" />', obj.product_image.url)
+    def product_image_preview(self, obj):
+        # ✅ Use snapshot first
+        if obj.product_image:
+            return format_html(
+                '<img src="{}" width="80" style="border:1px solid #ccc; padding:4px;" />',
+                obj.product_image
+            )
+        # Fallback if product still exists
+        if obj.product and obj.product.image and getattr(obj.product.image, 'public_id', None):
+            return format_html(
+                '<img src="{}" width="80" style="border:1px solid #ccc; padding:4px;" />',
+                obj.product.image.url
+            )
         return "No Image"
 
-    product_image.short_description = "Product Image"
-
+    product_image_preview.short_description = "Product Image"
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "user",
+        
         "total_amount",
         "payment_method",
         "status",
@@ -153,30 +178,32 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ("id", "user__email")
     inlines = [OrderItemInline]
     date_hierarchy = "created_at"
-
+    
 @admin.register(OrderItem)
 class OrderItemRequestAdmin(admin.ModelAdmin):
     list_display = (
-        'product', 'order', 'get_user', 'return_requested', 
-        'refund_requested', 'exchange_requested', 'request_status'
+        'product', 'order', 'get_user', 'return_requested', 'category_name',
+        'refund_requested', 'exchange_requested', 'request_status','store_name'
     )
     list_filter = ('return_requested', 'refund_requested', 'exchange_requested', 'request_status')
-    search_fields = ('product__name', 'order__id', 'order__user__email')
+    search_fields = ('product__name','store_name', 'order__id', 'order__user__email')
 
     def get_user(self, obj):
         return obj.order.user
     get_user.short_description = 'User'
 
+    
 from django.contrib import admin
 
 class OrderItemRequestBaseAdmin(admin.ModelAdmin):
-    list_display = ('product', 'order', 'get_user', 'request_status')
-    search_fields = ('product__name', 'order__id', 'order__user__email')
+    list_display = ('product', 'order', 'get_user', 'request_status','store_name','category_name')
+    search_fields = ('product__name','store_name', 'order__id', 'order__user__email')
 
     def get_user(self, obj):
         return obj.order.user
     get_user.short_description = 'User'
 
+  
 @admin.register(ReturnRequest)
 class ReturnRequestAdmin(OrderItemRequestBaseAdmin):
     def get_queryset(self, request):
@@ -195,4 +222,7 @@ class ExchangeRequestAdmin(OrderItemRequestBaseAdmin):
         qs = super().get_queryset(request)
         return qs.filter(exchange_requested=True)
     
-    
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ['name', 'owner', 'category', 'is_active', 'gst_number']
+    list_editable = ['owner', 'is_active', 'gst_number'] 
+

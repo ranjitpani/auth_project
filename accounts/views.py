@@ -176,33 +176,24 @@ def location(request):
     return render(request, 'location.html')
 
 
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .forms import ProfileForm
+
 @login_required
 def profile(request):
     user = request.user
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ProfileForm(request.POST, instance=user)
         if form.is_valid():
-            user = form.save(commit=False)
-
-            # 🔥 AUTO CLEAR LOWER LEVELS
-            if not user.country:
-                user.state = None
-                user.district = None
-                user.block = None
-            elif not user.state:
-                user.district = None
-                user.block = None
-            elif not user.district:
-                user.block = None
-
-            user.save()
-            return redirect('home')
+            form.save()   # ✅ ONE TIME SAVE
+            return redirect("home")
     else:
         form = ProfileForm(instance=user)
 
-    return render(request, 'profile.html', {'form': form})
-
+    return render(request, "profile.html", {"form": form})
 from .models import Store
 
 # accounts/views.py
@@ -224,70 +215,6 @@ from django.contrib.auth.decorators import login_required
 from collections import defaultdict
 import random
 from .models import Store, StoreCategory, Product
-
-# @login_required
-# def home(request):
-#     user = request.user
-
-#     # ================= GET PARAMETERS =================
-#     selected_category = request.GET.get('category')
-#     product_q = request.GET.get('product_q', '')
-#     store_q = request.GET.get('store_q', '')
-
-#     # ================= STORES (Location + Category + Store Search) =================
-#     stores = Store.objects.filter(
-#         country=user.country,
-#         state=user.state,
-#         district=user.district,
-#         block=user.block,
-#         is_active=True
-#     )
-
-#     if selected_category and selected_category.isdigit():
-#         stores = stores.filter(category__id=int(selected_category))
-
-#     if store_q:
-#         stores = stores.filter(name__icontains=store_q)
-
-#     # ================= STORE CATEGORIES (ICON + NAME) =================
-#     store_categories = StoreCategory.objects.filter(
-#         stores__country=user.country,
-#         stores__state=user.state,
-#         stores__district=user.district,
-#         stores__block=user.block,
-#         stores__is_active=True
-#     ).distinct()
-
-#     # ================= PRODUCTS (Availability + Product Search) =================
-#     products = Product.objects.filter(is_available=True)
-
-#     if product_q:
-#         products = products.filter(name__icontains=product_q)
-
-#     # organize products by category
-#     products_by_category = defaultdict(list)
-#     for p in products:
-#         cat_name = p.category.name if p.category else 'Uncategorized'
-#         if len(products_by_category[cat_name]) < 6:
-#             products_by_category[cat_name].append(p)
-
-#     # Shuffle products inside each category
-#     for plist in products_by_category.values():
-#         random.shuffle(plist)
-
-#     context = {
-#         'stores': stores,
-#         'store_categories': store_categories,
-#         'selected_category': selected_category,
-#         'products_by_category': dict(products_by_category),
-#         'product_q': product_q,
-#         'store_q': store_q,
-#     }
-#     return render(request, 'home.html', context)
-
-from collections import defaultdict
-# import random
-# from django.contrib.auth.decorators import login_required
 
 from collections import defaultdict
 import random
@@ -610,153 +537,7 @@ def add_to_cart(request, product_id, size):
 
     messages.success(request, "Product added to cart")
     return redirect("cart")
-# @login_required
-# def cart(request):
-#     cart = request.session.get('cart', {})
-#     cart_items = []
-#     cart_total = 0       # discounted total
-#     cart_subtotal = 0    # original total
-#     product_ids_in_cart = [item['product'].id for item in cart_items]
-#     for key, qty in cart.items():
-#         try:
-#             product_id, size = key.split('_')
-#             product = get_object_or_404(Product, id=product_id)
-#             stock = ProductStock.objects.get(product=product, size=size)
-#             # choose price (discounted > normal)
-#             price = product.discounted_price if product.discounted_price else product.price
-#             # calculate item total
-#             item_total = price * qty
-#             cart_total += item_total
-#             cart_subtotal += product.price * qty  # original total
-#             # calculate % OFF
-#             off_percent = 0
-#             if product.discounted_price and product.price:
-#                 off_percent = round((product.price - product.discounted_price) / product.price * 100)
-#             cart_items.append({
-#                 'product': product,
-#                 'size': size,
-#                 'quantity': qty,
-#                 'stock': stock.stock,
-#                 'price': price,
-#                 'item_total': item_total,
-#                 'off_percent': off_percent,
-#             })
 
-#             product_ids_in_cart.append(product.id)            
-#         except ProductStock.DoesNotExist:
-#             continue
-#     related_products = []
-
-#     if cart_items:
-#         first_product = cart_items[0]['product']
-
-#         # 1️⃣ Similar category OR name
-#         qs = Product.objects.filter(
-#             Q(category=first_product.category) |
-#             Q(name__icontains=first_product.name.split()[0])
-#         ).exclude(
-#             id__in=product_ids_in_cart
-#         )
-
-#         related_products = list(qs)
-
-#         # 2️⃣ If less products, add random
-#         if len(related_products) < 6:
-#             extra = list(
-#                 Product.objects.exclude(
-#                     id__in=product_ids_in_cart
-#                 ).exclude(
-#                     id__in=[p.id for p in related_products]
-#                 )
-#             )
-#             related_products += extra
-
-#         # 3️⃣ Shuffle + limit
-#         random.shuffle(related_products)
-#         related_products = related_products[:6]
-
-#     context = {
-#         "cart_items": cart_items,
-#         "cart_total": cart_total,
-#         "cart_subtotal": cart_subtotal,
-#         "related_products": related_products,
-#     }
-
-#     return render(request, "cart.html", context)  
-# 
-# @login_required
-# def cart(request):
-#     cart = request.session.get('cart', {})
-#     cart_items = []
-#     cart_total = 0
-#     cart_subtotal = 0
-#     product_ids_in_cart = []
-
-#     for key, qty in cart.items():
-#         try:
-#             product_id, size = key.split('_')
-#             product = get_object_or_404(Product, id=product_id)
-#             stock = ProductStock.objects.get(product=product, size=size)
-
-#             price = product.discounted_price or product.price
-#             item_total = price * qty
-
-#             cart_total += item_total
-#             cart_subtotal += product.price * qty
-
-#             off_percent = 0
-#             if product.discounted_price:
-#                 off_percent = round(
-#                     (product.price - product.discounted_price) / product.price * 100
-#                 )
-
-#             cart_items.append({
-#                 'product': product,
-#                 'size': size,
-#                 'quantity': qty,
-#                 'stock': stock.stock,
-#                 'price': price,
-#                 'item_total': item_total,
-#                 'off_percent': off_percent,
-#             })
-
-#             product_ids_in_cart.append(product.id)
-
-#         except ProductStock.DoesNotExist:
-#             continue
-
-#     # ================= RELATED PRODUCTS =================
-#     related_products = []
-
-#     if cart_items:
-#         first_product = cart_items[0]['product']
-
-#         qs = Product.objects.filter(
-#             Q(category=first_product.category) |
-#             Q(name__icontains=first_product.name.split()[0])
-#         ).exclude(id__in=product_ids_in_cart)
-
-#         related_products = list(qs)
-
-#         if len(related_products) < 6:
-#             extra = list(
-#                 Product.objects.exclude(id__in=product_ids_in_cart)
-#                 .exclude(id__in=[p.id for p in related_products])
-#             )
-#             related_products += extra
-
-#         random.shuffle(related_products)
-#         related_products = related_products[:6]
-
-#     context = {
-#         "cart_items": cart_items,
-#         "cart_total": cart_total,
-#         "cart_subtotal": cart_subtotal,
-#         "related_products": related_products,
-#     }
-
-#     return render(request, "cart.html", context)      
-   
 @login_required
 def cart(request):
     cart = request.session.get('cart', {})
@@ -1380,15 +1161,20 @@ from django.contrib.auth.decorators import login_required
 def edit_address(request, address_id):
     address = get_object_or_404(UserAddress, id=address_id, user=request.user)
 
-    if request.method == 'POST':
-        address.name = request.POST.get('name')
-        address.mobile = request.POST.get('mobile')
-        address.alt_mobile = request.POST.get('alt_mobile')
-        address.pincode = request.POST.get('pincode')
-        address.address = request.POST.get('address')
-        address.save()
-        return redirect('checkout_summary')
+    if request.method == "POST":
+        address.name = request.POST.get("name")
+        address.mobile = request.POST.get("mobile")
+        address.alt_mobile = request.POST.get("alt_mobile")
+        address.pincode = request.POST.get("pincode")
 
+    # ✅ USER INPUT — FINAL
+        address.state = request.POST.get("state")
+        address.district = request.POST.get("district")
+        address.block = request.POST.get("block")   # 🔥 THIS LINE IS KEY
+        address.address = request.POST.get("address")
+
+        address.save()
+        return redirect("checkout_summary")
     return render(request, 'checkout/edit_address.html', {'address': address})
 
 # views.py
@@ -1550,47 +1336,81 @@ def process_order_request(request, item_id, approve=True):
     return redirect('/admin/')
 
 # views.py
+# from django.http import HttpResponse
+# from .models import State, District, Block
+# def ajax_load_states(request):
+#     country_id = request.GET.get('country')
+#     if not country_id:
+#         return HttpResponse("")
+#     states = State.objects.filter(country_id=country_id)
+#     return HttpResponse(''.join(
+#         f'<option value="{s.id}">{s.name}</option>' for s in states
+#     ))
+
+
+# def ajax_load_districts(request):
+#     state_id = request.GET.get('state')
+#     if not state_id:
+#         return HttpResponse("")
+#     districts = District.objects.filter(state_id=state_id)
+#     return HttpResponse(''.join(
+#         f'<option value="{d.id}">{d.name}</option>' for d in districts
+#     ))
+
+
+# def ajax_load_blocks(request):
+#     district_id = request.GET.get('district')
+#     if not district_id:
+#         return HttpResponse("")
+#     blocks = Block.objects.filter(district_id=district_id)
+#     return HttpResponse(''.join(
+#         f'<option value="{b.id}">{b.name}</option>' for b in blocks
+#     ))
+
+# from .models import Village
+
+# def ajax_load_villages(request):
+#     block_id = request.GET.get('block')
+#     if not block_id:
+#         return HttpResponse("")
+#     villages = Village.objects.filter(block_id=block_id)
+#     return HttpResponse(''.join(
+#         f'<option value="{v.id}">{v.name}</option>' for v in villages
+#     ))
 from django.http import HttpResponse
-from .models import State, District, Block
+from .models import State, District, Block, Village
+
 def ajax_load_states(request):
     country_id = request.GET.get('country')
-    if not country_id:
-        return HttpResponse("")
     states = State.objects.filter(country_id=country_id)
-    return HttpResponse(''.join(
-        f'<option value="{s.id}">{s.name}</option>' for s in states
-    ))
-
+    return HttpResponse(
+        '<option value="">Select State</option>' +
+        ''.join(f'<option value="{s.id}">{s.name}</option>' for s in states)
+    )
 
 def ajax_load_districts(request):
     state_id = request.GET.get('state')
-    if not state_id:
-        return HttpResponse("")
     districts = District.objects.filter(state_id=state_id)
-    return HttpResponse(''.join(
-        f'<option value="{d.id}">{d.name}</option>' for d in districts
-    ))
-
+    return HttpResponse(
+        '<option value="">Select District</option>' +
+        ''.join(f'<option value="{d.id}">{d.name}</option>' for d in districts)
+    )
 
 def ajax_load_blocks(request):
     district_id = request.GET.get('district')
-    if not district_id:
-        return HttpResponse("")
     blocks = Block.objects.filter(district_id=district_id)
-    return HttpResponse(''.join(
-        f'<option value="{b.id}">{b.name}</option>' for b in blocks
-    ))
-
-from .models import Village
+    return HttpResponse(
+        '<option value="">Select Block</option>' +
+        ''.join(f'<option value="{b.id}">{b.name}</option>' for b in blocks)
+    )
 
 def ajax_load_villages(request):
     block_id = request.GET.get('block')
-    if not block_id:
-        return HttpResponse("")
     villages = Village.objects.filter(block_id=block_id)
-    return HttpResponse(''.join(
-        f'<option value="{v.id}">{v.name}</option>' for v in villages
-    ))
+    return HttpResponse(
+        '<option value="">Select Village</option>' +
+        ''.join(f'<option value="{v.id}">{v.name}</option>' for v in villages)
+    )
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from .models import Order

@@ -1,0 +1,52 @@
+{% extends "store_owner/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ form.instance.pk|yesno:"Edit Product,Add Product" }}</h3>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="mb-3">{{ form.store.label_tag }} {{ form.store }}</div>
+        <div class="mb-3">{{ form.name.label_tag }} {{ form.name }}</div>
+        <div class="mb-3">{{ form.category.label_tag }} {{ form.category }}</div>
+        <div class="mb-3">{{ form.price.label_tag }} {{ form.price }}</div>
+        <div class="mb-3">{{ form.discounted_price.label_tag }} {{ form.discounted_price }}</div>
+        <div class="mb-3">{{ form.gst_number.label_tag }} {{ form.gst_number }}</div>
+        <div class="mb-3">{{ form.gst_rate.label_tag }} {{ form.gst_rate }}</div>
+        <div class="mb-3">{{ form.delivery_charge.label_tag }} {{ form.delivery_charge }}</div>
+        <div class="mb-3">{{ form.description.label_tag }} {{ form.description }}</div>
+        <div class="mb-3">{{ form.image.label_tag }} {{ form.image }}</div>
+        <div class="mb-3">{{ form.is_available }} {{ form.is_available.label_tag }}</div>
+
+        <hr>
+        <h5>Stock by Size</h5>
+
+        {{ stock_formset.management_form }}
+
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Size</th>
+                    <th>Stock</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sform in stock_formset %}
+                <tr>
+                    {{ sform.id }}  <!-- 🔥 THIS FIXES EVERYTHING -->
+                    <td>{{ sform.size }}</td>
+                    <td>{{ sform.stock }}</td>
+                    <td>{{ sform.DELETE }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{% url 'store_owner_dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

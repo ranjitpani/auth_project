@@ -1,0 +1,91 @@
+{% extends "store_owner/base.html" %}
+{% block content %}
+
+<div class="container-fluid px-2 mt-3">
+    <h4 class="mb-3 fw-bold">📦 Orders Received</h4>
+
+    <!-- 🔥 SCROLL WRAPPER -->
+    <div class="table-responsive" style="overflow-x:auto; -webkit-overflow-scrolling: touch;">
+
+        <table class="table table-bordered table-striped align-middle w-100">
+            <thead class="table-dark text-nowrap">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Size</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in orders %}
+                <tr class="text-nowrap">
+                    <td>#{{ item.order.order_id }}</td>
+
+                    <td>
+                        {% if item.product_image %}
+                            <img src="{{ item.product_image }}"
+                                 alt="{{ item.product_name }}"
+                                 width="55"
+                                 height="55"
+                                 style="object-fit:cover;border-radius:8px;">
+                        {% else %}
+                            <span class="text-muted">No Image</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ item.product_name }}</td>
+
+                    <td>
+                        {{ item.category_name|default:"N/A" }}
+                    </td>
+
+                    <td>{{ item.size }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.price }}</td>
+
+                    <td>
+                        {% if item.order.status == "pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif item.order.status == "packed" %}
+                            <span class="badge bg-info text-dark">Packed</span>
+                        {% elif item.order.status == "shipped" %}
+                            <span class="badge bg-primary">Shipped</span>
+                        {% elif item.order.status == "delivered" %}
+                            <span class="badge bg-success">Delivered</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ item.order.created_at|date:"d M Y" }}</td>
+
+                    <td>
+                        {% if item.order.status == "pending" %}
+                            <a href="{% url 'mark_packed' item.order.id %}"
+                               class="btn btn-sm btn-success">
+                                Pack
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Action</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted">
+                        No orders yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+{% endblock %}

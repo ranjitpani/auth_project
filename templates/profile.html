@@ -109,6 +109,7 @@
         💾 Save Location
       </button>
     </form>
+   
 
     <!-- LOGOUT -->
     <form method="post" action="{% url 'logout' %}">
@@ -121,7 +122,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
+<!-- <script>
 $("#id_country").change(function(){
   $.get("{% url 'ajax_load_states' %}", {
     country: $(this).val()
@@ -159,5 +160,109 @@ $("#id_block").change(function(){
     $("#id_village").html(data);
   });
 });
+</script> -->
+<!-- <script>
+  $("#id_country").change(function () {
+  $.get("{% url 'ajax_load_states' %}", {
+    country: $(this).val()
+  }, function (data) {
+    $("#id_state").html(data);
+    $("#id_district").html('');
+    $("#id_block").html('');
+    $("#id_village").html('');
+  });
+});
+
+$("#id_state").change(function () {
+  $.get("{% url 'ajax_load_districts' %}", {
+    state: $(this).val()
+  }, function (data) {
+    $("#id_district").html(data);
+    $("#id_block").html('');
+    $("#id_village").html('');
+  });
+});
+
+$("#id_district").change(function () {
+  $.get("{% url 'ajax_load_blocks' %}", {
+    district: $(this).val()
+  }, function (data) {
+    $("#id_block").html(data);
+    $("#id_village").html('');
+  });
+});
+
+$("#id_block").change(function () {
+  $.get("{% url 'ajax_load_villages' %}", {
+    block: $(this).val()
+  }, function (data) {
+    $("#id_village").html(data);
+  });
+});
+</script> -->
+<script>
+$(document).ready(function () {
+
+  // ----- COUNTRY → STATE -----
+  $("#id_country").on("change", function () {
+    const countryId = $(this).val();
+
+    $("#id_state").html('<option value="">Select State</option>');
+    $("#id_district").html('<option value="">Select District</option>');
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+
+    if (!countryId) return;
+
+    $.get("{% url 'ajax_load_states' %}", { country: countryId }, function (data) {
+      $("#id_state").append(data);
+    });
+  });
+
+  // ----- STATE → DISTRICT -----
+  $("#id_state").on("change", function () {
+    const stateId = $(this).val();
+
+    $("#id_district").html('<option value="">Select District</option>');
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+
+    if (!stateId) return;
+
+    $.get("{% url 'ajax_load_districts' %}", { state: stateId }, function (data) {
+      $("#id_district").append(data);
+    });
+  });
+
+  // ----- DISTRICT → BLOCK -----
+  $("#id_district").on("change", function () {
+    const districtId = $(this).val();
+
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+
+    if (!districtId) return;
+
+    $.get("{% url 'ajax_load_blocks' %}", { district: districtId }, function (data) {
+      $("#id_block").append(data);
+    });
+  });
+
+  // ----- BLOCK → VILLAGE (🔥 MAIN FIX) -----
+  $("#id_block").on("change", function () {
+    const blockId = $(this).val();
+
+    $("#id_village").html('<option value="">Select Village</option>');
+
+    if (!blockId) return;
+
+    $.get("{% url 'ajax_load_villages' %}", { block: blockId }, function (data) {
+      $("#id_village").append(data);
+    });
+  });
+
+});
+
+
 </script>
 {% endblock %}
