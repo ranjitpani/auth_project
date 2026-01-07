@@ -164,20 +164,33 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
+        "order_uid",
         "user",
-        
         "total_amount",
         "payment_method",
         "status",
         "expected_delivery",
+        "view_location",
         "created_at",
     )
     list_filter = ("status", "payment_method")
     list_editable = ("status", "expected_delivery")
-    search_fields = ("id", "user__email")
+    search_fields = ("order_uid", "user__email")
     inlines = [OrderItemInline]
     date_hierarchy = "created_at"
+    readonly_fields = ("order_uid",)
+    def view_location(self, obj):
+        if obj.latitude and obj.longitude:
+            return format_html(
+                '<a href="https://www.google.com/maps?q={},{}" target="_blank">'
+                '📍 View Map</a>',
+                obj.latitude,
+                obj.longitude
+            )
+        return "—"
+
+    view_location.short_description = "Customer Location"
+    
     
 @admin.register(OrderItem)
 class OrderItemRequestAdmin(admin.ModelAdmin):
@@ -186,7 +199,7 @@ class OrderItemRequestAdmin(admin.ModelAdmin):
         'refund_requested', 'exchange_requested', 'request_status','store_name'
     )
     list_filter = ('return_requested', 'refund_requested', 'exchange_requested', 'request_status')
-    search_fields = ('product__name','store_name', 'order__id', 'order__user__email')
+    search_fields = ('product__name','store_name', 'order__order_uid', 'order__user__email')
 
     def get_user(self, obj):
         return obj.order.user
@@ -197,7 +210,7 @@ from django.contrib import admin
 
 class OrderItemRequestBaseAdmin(admin.ModelAdmin):
     list_display = ('product', 'order', 'get_user', 'request_status','store_name','category_name')
-    search_fields = ('product__name','store_name', 'order__id', 'order__user__email')
+    search_fields = ('product__name','store_name', 'order__order_uid', 'order__user__email')
 
     def get_user(self, obj):
         return obj.order.user
@@ -222,7 +235,7 @@ class ExchangeRequestAdmin(OrderItemRequestBaseAdmin):
         qs = super().get_queryset(request)
         return qs.filter(exchange_requested=True)
     
-class StoreAdmin(admin.ModelAdmin):
-    list_display = ['name', 'owner', 'category', 'is_active', 'gst_number']
-    list_editable = ['owner', 'is_active', 'gst_number'] 
+# class StoreAdmin(admin.ModelAdmin):
+#     list_display = ['name', 'owner', 'category', 'is_active', 'gst_number']
+#     list_editable = ['owner', 'is_active', 'gst_number'] 
 

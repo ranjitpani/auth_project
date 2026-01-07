@@ -1,6 +1,138 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% block title %}Set Location{% endblock %}
 
 {% block content %}
-<h1>Location Page</h1>
-<p>Here you can view or update your location.</p>
+<style>
+.location-page{
+  padding:16px;
+  animation:fadeIn .4s ease;
+}
+.location-card{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.08);
+}
+.location-header{
+  text-align:center;
+  margin-bottom:18px;
+}
+.location-header h2{
+  font-size:20px;
+  font-weight:800;
+}
+.location-header p{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+.location-card label{
+  font-weight:700;
+  font-size:13px;
+}
+.location-card select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  margin-bottom:12px;
+  font-size:14px;
+  background:#f9f9f9;
+}
+.location-card select:focus{
+  outline:none;
+  border-color:#2874f0;
+  background:#fff;
+}
+.save-btn{
+  width:100%;
+  padding:14px;
+  background:linear-gradient(135deg,#2874f0,#0059d6);
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  margin-top:10px;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+
+<div class="location-page">
+  <div class="location-card">
+
+    <!-- HEADER -->
+    <div class="location-header">
+      <h2>📍 Set Your Location</h2>
+      <p>Nearby store & product ଦେଖିବା ପାଇଁ location set କରନ୍ତୁ</p>
+    </div>
+
+    <!-- LOCATION FORM -->
+    <form method="post" action="{% url 'location' %}">
+
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <button type="submit" class="save-btn">
+        💾 Save Location
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<!-- JQUERY -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+  $("#id_country").on("change", function () {
+    const id = $(this).val();
+    $("#id_state").html('<option value="">Select State</option>');
+    $("#id_district").html('<option value="">Select District</option>');
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+    if (!id) return;
+    $.get("{% url 'ajax_load_states' %}", { country: id }, function (data) {
+      $("#id_state").append(data);
+    });
+  });
+
+  $("#id_state").on("change", function () {
+    const id = $(this).val();
+    $("#id_district").html('<option value="">Select District</option>');
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+    if (!id) return;
+    $.get("{% url 'ajax_load_districts' %}", { state: id }, function (data) {
+      $("#id_district").append(data);
+    });
+  });
+
+  $("#id_district").on("change", function () {
+    const id = $(this).val();
+    $("#id_block").html('<option value="">Select Block</option>');
+    $("#id_village").html('<option value="">Select Village</option>');
+    if (!id) return;
+    $.get("{% url 'ajax_load_blocks' %}", { district: id }, function (data) {
+      $("#id_block").append(data);
+    });
+  });
+
+  $("#id_block").on("change", function () {
+    const id = $(this).val();
+    $("#id_village").html('<option value="">Select Village</option>');
+    if (!id) return;
+    $.get("{% url 'ajax_load_villages' %}", { block: id }, function (data) {
+      $("#id_village").append(data);
+    });
+  });
+
+});
+</script>
+
 {% endblock %}

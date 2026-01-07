@@ -177,13 +177,44 @@ class Product(models.Model):
         return self.name
 
 # Optional: Size-wise stock management
+# class ProductStock(models.Model):
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stocks')
+#     size = models.CharField(max_length=50)  # e.g., S, M, L, XL
+#     stock = models.PositiveIntegerField(default=0)  # Quantity available
+#     def __str__(self):
+#         return f"{self.product.name} - {self.size} ({self.stock})"
+    
+from django.utils.text import slugify
+
 class ProductStock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stocks')
     size = models.CharField(max_length=50)  # e.g., S, M, L, XL
     stock = models.PositiveIntegerField(default=0)  # Quantity available
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Auto-generate SKU if not already set
+        if not self.sku:
+            # Take first 10 letters of product name + first 5 letters of size
+            product_code = slugify(self.product.name)[:10]
+            size_code = slugify(self.size)[:5]
+            base_sku = f"{product_code}-{size_code}"
+
+            # Ensure uniqueness
+            existing = ProductStock.objects.filter(sku=base_sku)
+            counter = 1
+            sku_final = base_sku
+            while existing.exists():
+                sku_final = f"{base_sku}-{counter}"
+                existing = ProductStock.objects.filter(sku=sku_final)
+                counter += 1
+
+            self.sku = sku_final
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.product.name} - {self.size} ({self.stock})"
-    
+        return f"{self.product.name} - {self.size} ({self.sku})"    
 # ---------------------------
 # Product Images (Multiple per product)
 # ---------------------------
@@ -215,10 +246,58 @@ class UserAddress(models.Model):
     def __str__(self):
         return f"{self.name} - {self.pincode}"
     
-from django.conf import settings
-from django.db import models
+# from django.conf import settings
+# from django.db import models
 
 
+# from django.db import models
+# from django.conf import settings
+
+# class Order(models.Model):
+#     STATUS_CHOICES = (
+#         ("pending", "Pending"),
+#         ("packed", "Packed"),
+#         ("shipped", "Shipped"),
+#         ("delivered", "Delivered"),
+#         ("cancelled", "Cancelled"),
+#         ("returned", "Returned"),
+#         ("refunded", "Refunded"),
+#         ("exchanged", "Exchanged"),
+#     )
+#     PAYMENT_CHOICES = (
+#         ('upi', 'UPI'),
+#         ('card', 'Card'),
+#         ('cod', 'Cash on Delivery'),
+#     )
+#     order_uid = models.CharField(
+#         max_length=25,
+#         unique=True,
+#         editable=False,
+#         db_index=True
+#     )
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
+#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+#     expected_delivery = models.DateField(null=True, blank=True)
+#     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+#     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     # ===== Add delivery and price info =====
+#     delivery_name = models.CharField(max_length=200, blank=True, null=True)
+#     delivery_phone = models.CharField(max_length=15, blank=True, null=True)
+#     delivery_address = models.TextField(blank=True, null=True)
+#     delivery_city = models.CharField(max_length=100, blank=True, null=True)
+#     delivery_postal_code = models.CharField(max_length=10, blank=True, null=True)
+#     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=40)
+
+#     def __str__(self):
+#         return f"Order #{self.id} - {self.user.email}"
+
+import uuid
+from django.utils import timezone
 from django.db import models
 from django.conf import settings
 
@@ -233,30 +312,59 @@ class Order(models.Model):
         ("refunded", "Refunded"),
         ("exchanged", "Exchanged"),
     )
+
     PAYMENT_CHOICES = (
         ('upi', 'UPI'),
         ('card', 'Card'),
         ('cod', 'Cash on Delivery'),
     )
+
+    # 🔥 UNIQUE ORDER ID
+    order_uid = models.CharField(
+        max_length=25,
+        null=True,      # ✅ VERY IMPORTANT
+        blank=True,
+        unique=True,
+        editable=False,
+        db_index=True
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
     expected_delivery = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    # ===== Add delivery and price info =====
+
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
     delivery_name = models.CharField(max_length=200, blank=True, null=True)
     delivery_phone = models.CharField(max_length=15, blank=True, null=True)
     delivery_address = models.TextField(blank=True, null=True)
     delivery_city = models.CharField(max_length=100, blank=True, null=True)
     delivery_postal_code = models.CharField(max_length=10, blank=True, null=True)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=40)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.order_uid:
+            self.order_uid = self.generate_order_uid()
+        super().save(*args, **kwargs)
+
+    def generate_order_uid(self):
+        date_str = timezone.now().strftime("%Y%m%d")
+        rand = uuid.uuid4().hex[:4].upper()
+        return f"ORD-{date_str}-{rand}"
 
     def __str__(self):
-        return f"Order #{self.id} - {self.user.email}"
-
+        return self.order_uid
+    
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True, blank=True)
@@ -330,7 +438,12 @@ class OrderItem(models.Model):
     bank_account_number = models.CharField(max_length=50, blank=True, null=True)
     bank_ifsc = models.CharField(max_length=20, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
-    
+    product_sku = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Snapshot of product SKU at time of order"
+    )
     def save(self, *args, **kwargs):
         if self.product:
             if not self.product_name:
@@ -339,6 +452,11 @@ class OrderItem(models.Model):
                 self.store_name = self.product.store.name
             if not self.category_name and self.product.category:
                 self.category_name = self.product.category.name
+            if not self.product_sku:
+                try:
+                    self.product_sku = self.product.stocks.first().sku if self.product.stocks.exists() else None
+                except:
+                    self.product_sku = None
         # Image snapshot
             if not self.product_image:
                 try:
@@ -407,3 +525,22 @@ class EmailOTP(models.Model):
     @staticmethod
     def generate_otp():
         return str(random.randint(100000, 999999))
+    
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return timezone.now() <= self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.user} - {self.otp}"

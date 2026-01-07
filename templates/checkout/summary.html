@@ -144,7 +144,6 @@ h4{
   </div>
 </div>
 {% endfor %}
-
 <h4>Price Details</h4>
 <div class="box">
   <div class="price-row">
@@ -157,10 +156,14 @@ h4{
     <span>- ₹ {{ discount }}</span>
   </div>
 
-  <!-- 🔥 DELIVERY CHARGE -->
   <div class="price-row">
-    <span>Delivery Charges</span>
-    <span>₹ {{ delivery_charge }}</span>
+    <span>Product Delivery</span>
+    <span>₹ {{ product_delivery_total }}</span>
+  </div>
+
+  <div class="price-row">
+    <span>Distance Delivery ({{ distance_km }} KM)</span>
+    <span>₹ {{ km_delivery_total }}</span>
   </div>
 
   <hr>
@@ -177,10 +180,23 @@ h4{
     <small>Total</small><br>
     <b style="font-size:19px; color: #16a34a;">₹ {{ total_amount }}</b>
   </div>
+  
   <a href="{% url 'checkout_payment' %}" class="pay-btn">
     Continue →
   </a>
 </div>
+<input type="hidden" id="latitude" name="latitude">
+<input type="hidden" id="longitude" name="longitude">
+
+<script>
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        document.getElementById("latitude").value = position.coords.latitude;
+        document.getElementById("longitude").value = position.coords.longitude;
+    });
+}
+</script>
+
 
 </body>
 </html>

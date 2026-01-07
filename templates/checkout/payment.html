@@ -152,18 +152,30 @@ h3{
     <b>₹ {{ subtotal }}</b>
   </div>
 
-  <div style="display:flex;justify-content:space-between;">
-    <span>Delivery</span>
-    <b>₹ {{ delivery_charge }}</b>
-  </div>
+   <!-- 🔥 DELIVERY BREAKUP -->
+  <!-- 🔥 DELIVERY BREAKUP -->
+<div style="display:flex;justify-content:space-between;">
+  <span>Product Delivery</span>
+  <b>₹ {{ product_delivery_total }}</b>
+</div>
 
-  <hr style="margin:10px 0;">
+<div style="display:flex;justify-content:space-between;">
+  <span>Distance Delivery</span>
+  <b>₹ {{ km_delivery_total }}</b>
+</div>
 
-  <div style="display:flex;justify-content:space-between;font-size:16px;">
-    <b>Total</b>
-    <b style="color: #15803d;">₹ {{ total_amount }}</b>
+<div style="display:flex;justify-content:space-between;font-weight:800;">
+  <span>Total Delivery</span>
+  <b>₹ {{ delivery_charge }}</b>
+</div>
+
+  <hr>
+
+  <div style="display:flex;justify-content:space-between;font-size:17px;">
+    <b>Total Payable</b>
+    <b style="color:#15803d;">₹ {{ total_amount }}</b>
   </div>
-</div>    
+</div>   
 
 <h3>Select Payment Method</h3>
 

@@ -5,7 +5,6 @@
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-
         {{ form.non_field_errors }}
 
         <div class="mb-3">{{ form.store.label_tag }} {{ form.store }}</div>
@@ -17,12 +16,54 @@
         <div class="mb-3">{{ form.gst_rate.label_tag }} {{ form.gst_rate }}</div>
         <div class="mb-3">{{ form.delivery_charge.label_tag }} {{ form.delivery_charge }}</div>
         <div class="mb-3">{{ form.description.label_tag }} {{ form.description }}</div>
-        <div class="mb-3">{{ form.image.label_tag }} {{ form.image }}</div>
         <div class="mb-3">{{ form.is_available }} {{ form.is_available.label_tag }}</div>
 
         <hr>
-        <h5>Stock by Size</h5>
 
+        <!-- 🔥 PRODUCT IMAGES -->
+        <h5>Product Images</h5>
+        <p class="text-muted">
+            Ctrl / Shift ଧରି multiple images select କରିପାରିବ
+        </p>
+
+        {{ image_formset.management_form }}
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width:60%">Image</th>
+                    <th style="width:20%">Preview</th>
+                    <th style="width:20%">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for img in image_formset %}
+                <tr>
+                    {{ img.id }}
+                    <td>
+                        {{ img.image }}
+                    </td>
+                    <td>
+                        {% if img.instance.pk %}
+                            <img src="{{ img.instance.image.url }}" 
+                                 width="80" height="80"
+                                 class="img-thumbnail">
+                        {% else %}
+                            <span class="text-muted">New</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ img.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- 🔥 STOCK -->
+        <h5>Stock by Size</h5>
         {{ stock_formset.management_form }}
 
         <table class="table table-bordered">
@@ -36,7 +77,7 @@
             <tbody>
                 {% for sform in stock_formset %}
                 <tr>
-                    {{ sform.id }}  <!-- 🔥 THIS FIXES EVERYTHING -->
+                    {{ sform.id }}
                     <td>{{ sform.size }}</td>
                     <td>{{ sform.stock }}</td>
                     <td>{{ sform.DELETE }}</td>

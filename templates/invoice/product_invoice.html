@@ -80,12 +80,12 @@
                 <td>1</td>
                 <td>{{ item.product_name }}</td>
                 <td>
-                    {% if item.product %}
-                        {{ item.product.sku }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
+    {% if item.product_sku %}
+        {{ item.product_sku }}
+    {% else %}
+        N/A
+    {% endif %}
+</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.price }}</td>
                 <td>{{ item.gst_rate }}%</td>
