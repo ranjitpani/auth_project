@@ -246,11 +246,13 @@
   <div class="image-scroll">
     {% for img in product.images.all %}
     <div class="image-item">
-      {% if img.image %}
-      <img src="{{ img.image.url }}" class="product-img">
-      {% else %}
-      <img src="{% static 'default_product.jpg' %}" class="product-img">
-      {% endif %}
+     {% if product.image %}
+    <img src="{{ product.image.url }}">
+{% elif product.images.first %}
+    <img src="{{ product.images.first.image.url }}">
+{% else %}
+    <img src="{% static 'default_product.jpg' %}">
+{% endif %}
     </div>
     {% empty %}
     <div class="image-item">
