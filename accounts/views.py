@@ -2048,46 +2048,54 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
 @login_required
 @transaction.atomic
 def place_order(request):
-    if request.method != 'POST':
-        return redirect('checkout_payment')
+    if request.method != "POST":
+        return redirect("checkout_payment")
 
-    payment_method = request.POST.get('payment_method')
+    # ================= PAYMENT =================
+    payment_method = request.POST.get("payment_method")
     if not payment_method:
         messages.error(request, "Please select payment method")
-        return redirect('checkout_payment')
+        return redirect("checkout_payment")
 
-    def safe_decimal(val):
-        try:
-            return Decimal(str(val))
-        except:
-            return Decimal("0")
-
-    checkout_type = request.session.get('checkout_type', 'cart')
-
+    # ================= ADDRESS =================
     address = UserAddress.objects.filter(
         user=request.user,
         is_default=True
     ).first()
+
     if not address:
         messages.error(request, "Please add delivery address")
-        return redirect('checkout_address')
+        return redirect("checkout_address")
+
+    # ================= SAFE LAT LNG =================
+    try:
+        user_lat = Decimal(str(request.session.get("order_latitude", "0")))
+        user_lng = Decimal(str(request.session.get("order_longitude", "0")))
+    except InvalidOperation:
+        user_lat = Decimal("0")
+        user_lng = Decimal("0")
 
     items = []
     subtotal = Decimal("0")
     delivery_total = Decimal("0")
 
-    user_lat = safe_decimal(request.session.get("order_latitude"))
-    user_lng = safe_decimal(request.session.get("order_longitude"))
+    checkout_type = request.session.get("checkout_type", "cart")
 
-    # ========= BUY NOW =========
-    if checkout_type == 'buy_now' and request.session.get('buy_now'):
-        buy = request.session['buy_now']
-        product = get_object_or_404(Product, id=buy['product_id'])
-        size = buy['size']
-        qty = int(buy.get('qty', 1))
+    # ================= BUY NOW =================
+    if checkout_type == "buy_now" and request.session.get("buy_now"):
+        buy = request.session["buy_now"]
+        product = get_object_or_404(Product, id=buy["product_id"])
+        size = buy["size"]
+        qty = int(buy.get("qty", 1))
 
         price = product.discounted_price or product.price
         product_delivery = Decimal(product.delivery_charge or 0)
@@ -2099,24 +2107,26 @@ def place_order(request):
             user_lng
         )
 
+        final_delivery = product_delivery + km_charge
+
         try:
             stock = ProductStock.objects.select_for_update().get(
                 product=product,
                 size=size
             )
         except ProductStock.DoesNotExist:
-            messages.error(request, "Selected size not available")
-            return redirect('cart')
+            messages.error(request, "Product stock not found")
+            return redirect("cart")
 
         if stock.stock < qty:
             messages.error(request, "Product out of stock")
-            return redirect('cart')
+            return redirect("cart")
 
         stock.stock -= qty
         stock.save()
 
         subtotal += price * qty
-        delivery_total += (product_delivery + km_charge)
+        delivery_total += final_delivery
 
         items.append({
             "product": product,
@@ -2126,15 +2136,15 @@ def place_order(request):
             "sku": stock.sku
         })
 
-    # ========= CART =========
+    # ================= CART =================
     else:
-        cart = request.session.get('cart', {})
+        cart = request.session.get("cart", {})
         if not cart:
             messages.error(request, "Cart empty")
-            return redirect('cart')
+            return redirect("cart")
 
         for key, qty in cart.items():
-            product_id, size = key.split('_')
+            product_id, size = key.split("_")
             product = get_object_or_404(Product, id=product_id)
             qty = int(qty)
 
@@ -2148,24 +2158,26 @@ def place_order(request):
                 user_lng
             )
 
+            final_delivery = product_delivery + km_charge
+
             try:
                 stock = ProductStock.objects.select_for_update().get(
                     product=product,
                     size=size
                 )
             except ProductStock.DoesNotExist:
-                messages.error(request, f"{product.name} size not available")
-                return redirect('cart')
+                messages.error(request, f"{product.name} ({size}) stock missing")
+                return redirect("cart")
 
             if stock.stock < qty:
                 messages.error(request, f"{product.name} ({size}) out of stock")
-                return redirect('cart')
+                return redirect("cart")
 
             stock.stock -= qty
             stock.save()
 
             subtotal += price * qty
-            delivery_total += (product_delivery + km_charge)
+            delivery_total += final_delivery
 
             items.append({
                 "product": product,
@@ -2175,6 +2187,7 @@ def place_order(request):
                 "sku": stock.sku
             })
 
+    # ================= CREATE ORDER =================
     total_amount = subtotal + delivery_total
 
     order = Order.objects.create(
@@ -2205,6 +2218,7 @@ def place_order(request):
             product_sku=i["sku"]
         )
 
+    # ================= CLEAN SESSION =================
     request.session.pop("cart", None)
     request.session.pop("buy_now", None)
     request.session.pop("checkout_type", None)
@@ -2212,7 +2226,6 @@ def place_order(request):
     messages.success(request, "Order placed successfully 🎉")
     return redirect("cart_history")
 
-    
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 
