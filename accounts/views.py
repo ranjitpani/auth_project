@@ -1729,7 +1729,103 @@ from collections import defaultdict
 from django.db.models.functions import Random
 from .models import Product, ProductStock
 
+# def product_detail(request, id):
+#     product = get_object_or_404(Product, id=id)
+
+#     # =========================
+#     # RECENTLY VIEWED
+#     # =========================
+#     viewed = request.session.get("recently_viewed", [])
+#     if product.id not in viewed:
+#         viewed.insert(0, product.id)
+#     request.session["recently_viewed"] = viewed[:10]
+
+#     # =========================
+#     # AVAILABLE SIZES
+#     # =========================
+#     available_stocks = ProductStock.objects.filter(
+#         product=product,
+#         stock__gt=0
+#     )
+
+#     # =========================
+#     # FIRST → SAME CATEGORY + SAME NAME
+#     # =========================
+#     priority_products = Product.objects.filter(
+#         is_available=True,
+#         category=product.category,
+#         name__icontains=product.name
+#     ).exclude(id=product.id)
+
+#     for p in priority_products:
+#         if p.discounted_price and p.price > 0:
+#             p.off_percent = int(((p.price - p.discounted_price) / p.price) * 100)
+#         else:
+#             p.off_percent = 0
+
+#     priority_products = list(priority_products[:10])
+
+#     # =========================
+#     # THEN → RANDOM PRODUCTS
+#     # =========================
+#     random_products = Product.objects.filter(
+#         is_available=True
+#     ).exclude(
+#         Q(id=product.id) |
+#         Q(id__in=[p.id for p in priority_products])
+#     ).order_by(Random())[:30]
+
+#     for p in random_products:
+#         if p.discounted_price and p.price > 0:
+#             p.off_percent = int(((p.price - p.discounted_price) / p.price) * 100)
+#         else:
+#             p.off_percent = 0
+
+#     # =========================
+#     # GROUP RANDOM PRODUCTS BY CATEGORY
+#     # =========================
+#     products_by_category = defaultdict(list)
+
+#     # First add priority products at top
+#     if product.category:
+#         products_by_category[product.category].extend(priority_products)
+
+#     # Then add random products
+#     for p in random_products:
+#         if p.category:
+#             products_by_category[p.category].append(p)
+
+#     # Limit per category
+#     for cat in products_by_category:
+#         products_by_category[cat] = products_by_category[cat][:10]
+
+#     # =========================
+#     # MAIN PRODUCT % OFF
+#     # =========================
+#     if product.discounted_price and product.price > 0:
+#         product.off_percent = int(((product.price - product.discounted_price) / product.price) * 100)
+#     else:
+#         product.off_percent = 0
+
+#     context = {
+#         "product": product,
+#         "available_stocks": available_stocks,
+#         "products_by_category": dict(products_by_category),
+#     }
+
+#     return render(request, "product_detail.html", context)
+
+from collections import defaultdict
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
+from django.db.models.functions import Random
+from decimal import Decimal
+from .models import Product, ProductStock
+
 def product_detail(request, id):
+    # =========================
+    # MAIN PRODUCT (show even if is_available=False)
+    # =========================
     product = get_object_or_404(Product, id=id)
 
     # =========================
@@ -1741,7 +1837,7 @@ def product_detail(request, id):
     request.session["recently_viewed"] = viewed[:10]
 
     # =========================
-    # AVAILABLE SIZES
+    # AVAILABLE STOCKS (size >0)
     # =========================
     available_stocks = ProductStock.objects.filter(
         product=product,
@@ -1749,24 +1845,22 @@ def product_detail(request, id):
     )
 
     # =========================
-    # FIRST → SAME CATEGORY + SAME NAME
+    # PRIORITY PRODUCTS (same category & name)
     # =========================
     priority_products = Product.objects.filter(
-        is_available=True,
         category=product.category,
         name__icontains=product.name
     ).exclude(id=product.id)
-
+    
     for p in priority_products:
         if p.discounted_price and p.price > 0:
             p.off_percent = int(((p.price - p.discounted_price) / p.price) * 100)
         else:
             p.off_percent = 0
-
     priority_products = list(priority_products[:10])
 
     # =========================
-    # THEN → RANDOM PRODUCTS
+    # RANDOM PRODUCTS
     # =========================
     random_products = Product.objects.filter(
         is_available=True
@@ -1774,7 +1868,7 @@ def product_detail(request, id):
         Q(id=product.id) |
         Q(id__in=[p.id for p in priority_products])
     ).order_by(Random())[:30]
-
+    
     for p in random_products:
         if p.discounted_price and p.price > 0:
             p.off_percent = int(((p.price - p.discounted_price) / p.price) * 100)
@@ -1782,25 +1876,20 @@ def product_detail(request, id):
             p.off_percent = 0
 
     # =========================
-    # GROUP RANDOM PRODUCTS BY CATEGORY
+    # GROUP PRODUCTS BY CATEGORY
     # =========================
     products_by_category = defaultdict(list)
-
-    # First add priority products at top
     if product.category:
         products_by_category[product.category].extend(priority_products)
-
-    # Then add random products
     for p in random_products:
         if p.category:
             products_by_category[p.category].append(p)
-
     # Limit per category
     for cat in products_by_category:
         products_by_category[cat] = products_by_category[cat][:10]
 
     # =========================
-    # MAIN PRODUCT % OFF
+    # MAIN PRODUCT OFF %
     # =========================
     if product.discounted_price and product.price > 0:
         product.off_percent = int(((product.price - product.discounted_price) / product.price) * 100)
@@ -1812,8 +1901,8 @@ def product_detail(request, id):
         "available_stocks": available_stocks,
         "products_by_category": dict(products_by_category),
     }
-
     return render(request, "product_detail.html", context)
+
 
 
 from django.shortcuts import render, redirect, get_object_or_404
