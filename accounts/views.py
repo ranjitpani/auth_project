@@ -1843,6 +1843,7 @@ def product_detail(request, id):
         product=product,
         stock__gt=0
     )
+    images = product.images.all()
 
     # =========================
     # PRIORITY PRODUCTS (same category & name)
@@ -1900,6 +1901,7 @@ def product_detail(request, id):
         "product": product,
         "available_stocks": available_stocks,
         "products_by_category": dict(products_by_category),
+         "images": images,
     }
     return render(request, "product_detail.html", context)
 
