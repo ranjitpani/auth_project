@@ -170,21 +170,23 @@ def reset_password(request):
 # def home(request):
 #     return render(request, 'home.html')
 
-
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Order
+from django.db.models import Prefetch
 
 @login_required
 def cart_history(request):
     orders = (
         Order.objects
         .filter(user=request.user)
-        .prefetch_related(
-            "items",
-            "items__product",
-            "items__product__images"
-        )
-        .order_by("-created_at")
+        .prefetch_related('items')
+        .order_by('-id')
     )
-    return render(request, "cart_history.html", {"orders": orders})
+
+    return render(request, 'cart_history.html', {
+        'orders': orders
+    })
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
