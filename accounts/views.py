@@ -706,6 +706,174 @@ from django.shortcuts import redirect, get_object_or_404
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 
+# @login_required
+# @transaction.atomic
+# def place_order(request):
+#     if request.method != "POST":
+#         return redirect("checkout_payment")
+
+#     try:
+#         # ================= PAYMENT =================
+#         payment_method = request.POST.get("payment_method")
+#         if not payment_method:
+#             raise Exception("Please select payment method")
+
+#         # ================= ADDRESS =================
+#         address = UserAddress.objects.filter(
+#             user=request.user,
+#             is_default=True
+#         ).first()
+#         if not address:
+#             raise Exception("Please add delivery address")
+
+#         # ================= SAFE LAT LNG =================
+#         user_lat = safe_decimal(request.session.get("order_latitude"))
+#         user_lng = safe_decimal(request.session.get("order_longitude"))
+
+#         items = []
+#         subtotal = Decimal("0")
+#         delivery_total = Decimal("0")
+
+#         checkout_type = request.session.get("checkout_type", "cart")
+
+#         # ================= BUY NOW =================
+#         if checkout_type == "buy_now" and request.session.get("buy_now"):
+#             buy = request.session["buy_now"]
+#             product = get_object_or_404(Product, id=buy["product_id"])
+#             size = buy["size"]
+#             qty = int(buy.get("qty", 1))
+#             price = product.discounted_price or product.price
+
+#             product_delivery = safe_decimal(product.delivery_charge)
+#             store_lat = safe_decimal(product.store.latitude)
+#             store_lng = safe_decimal(product.store.longitude)
+
+#             if store_lat > 0 and store_lng > 0 and user_lat > 0 and user_lng > 0:
+#                 distance_km, km_charge = calculate_km_delivery_charge(
+#                     store_lat, store_lng, user_lat, user_lng
+#                 )
+#             else:
+#                 km_charge = Decimal("0")
+
+#             final_delivery = product_delivery + km_charge
+
+#             stock = ProductStock.objects.select_for_update().filter(
+#                 product=product,
+#                 size=size
+#             ).first()
+#             if not stock or stock.stock < qty:
+#                 raise Exception("Product out of stock")
+
+#             stock.stock -= qty
+#             stock.save()
+
+#             subtotal += price * qty
+#             delivery_total += final_delivery
+
+#             items.append({
+#                 "product": product,
+#                 "size": size,
+#                 "price": price,
+#                 "qty": qty,
+#                 "sku": stock.sku
+#             })
+
+#         # ================= CART =================
+#         else:
+#             cart = request.session.get("cart", {})
+#             if not cart:
+#                 raise Exception("Cart is empty")
+
+#             for key, qty in cart.items():
+#                 product_id, size = key.split("_")
+#                 product = get_object_or_404(Product, id=product_id)
+#                 qty = int(qty)
+#                 price = product.discounted_price or product.price
+
+#                 product_delivery = safe_decimal(product.delivery_charge)
+#                 store_lat = safe_decimal(product.store.latitude)
+#                 store_lng = safe_decimal(product.store.longitude)
+
+#                 if store_lat > 0 and store_lng > 0 and user_lat > 0 and user_lng > 0:
+#                     distance_km, km_charge = calculate_km_delivery_charge(
+#                         store_lat, store_lng, user_lat, user_lng
+#                     )
+#                 else:
+#                     km_charge = Decimal("0")
+
+#                 final_delivery = product_delivery + km_charge
+
+#                 stock = ProductStock.objects.select_for_update().filter(
+#                     product=product,
+#                     size=size
+#                 ).first()
+#                 if not stock or stock.stock < qty:
+#                     raise Exception(f"{product.name} ({size}) out of stock")
+
+#                 stock.stock -= qty
+#                 stock.save()
+
+#                 subtotal += price * qty
+#                 delivery_total += final_delivery
+
+#                 items.append({
+#                     "product": product,
+#                     "size": size,
+#                     "price": price,
+#                     "qty": qty,
+#                     "sku": stock.sku
+#                 })
+
+#         # ================= CREATE ORDER =================
+#         total_amount = subtotal + delivery_total
+
+#         order = Order.objects.create(
+#             user=request.user,
+#             subtotal=subtotal,
+#             shipping_cost=delivery_total,
+#             total_amount=total_amount,
+#             payment_method=payment_method,
+#             delivery_name=address.name,
+#             delivery_phone=address.mobile,
+#             delivery_address=address.address,
+#             delivery_city=f"{address.block}, {address.district}, {address.state}",
+#             delivery_postal_code=address.pincode,
+#             latitude=user_lat,
+#             longitude=user_lng,
+#         )
+
+#         for i in items:
+#             OrderItem.objects.create(
+#                 order=order,
+#                 product=i["product"],
+#                 product_name=i["product"].name,
+#                 size=i["size"],
+#                 price=i["price"],
+#                 quantity=i["qty"],
+#                 gst_rate=i["product"].gst_rate,
+#                 gst_number=i["product"].gst_number,
+#                 product_sku=i["sku"]
+#             )
+
+#         # ================= CLEAN SESSION =================
+#         request.session.pop("cart", None)
+#         request.session.pop("buy_now", None)
+#         request.session.pop("checkout_type", None)
+
+#         messages.success(request, "Order placed successfully 🎉")
+#         return redirect("cart_history")
+
+#     except Exception as e:
+#         transaction.set_rollback(True)
+#         messages.error(request, str(e))
+#         return redirect("cart")
+
+from decimal import Decimal, InvalidOperation
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+
 @login_required
 @transaction.atomic
 def place_order(request):
@@ -867,6 +1035,8 @@ def place_order(request):
         transaction.set_rollback(True)
         messages.error(request, str(e))
         return redirect("cart")
+
+        
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 
