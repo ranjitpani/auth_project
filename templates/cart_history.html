@@ -132,13 +132,19 @@
   {% for item in order.items.all %}
 <div class="product-row">
 
-  {% if item.product and item.product.images.exists %}
-      <img src="{{ item.product.images.all.0.image.url }}">
-  {% elif item.product and item.product.image %}
-      <img src="{{ item.product.image.url }}">
-  {% else %}
-      <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
-  {% endif %}
+  {% if item.product and item.product.images.all %}
+    {% with img=item.product.images.all|first %}
+        {% if img %}
+            <img src="{{ img.image.url }}">
+        {% else %}
+            <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
+        {% endif %}
+    {% endwith %}
+{% elif item.product and item.product.image %}
+    <img src="{{ item.product.image.url }}">
+{% else %}
+    <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
+{% endif %}
 
   <div class="product-info">
     <b>{{ item.product_name }}</b>

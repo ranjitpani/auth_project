@@ -419,8 +419,9 @@ class OrderItem(models.Model):
         # Image snapshot
             if not self.product_image:
                 try:
-                    self.product_image = self.product.image.url if self.product.image else None
-                except:
+                    if self.product and self.product.image:
+                        self.product_image = self.product.image.url
+                except Exception:
                     self.product_image = None
         super().save(*args, **kwargs)
     # =====================
