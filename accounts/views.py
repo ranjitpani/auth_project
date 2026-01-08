@@ -175,13 +175,17 @@ from django.shortcuts import render
 from .models import Order
 from django.db.models import Prefetch
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Order
+
 @login_required
 def cart_history(request):
     orders = (
         Order.objects
         .filter(user=request.user)
         .prefetch_related('items')
-        .order_by('-id')
+        .order_by('-created_at')
     )
 
     return render(request, 'cart_history.html', {
