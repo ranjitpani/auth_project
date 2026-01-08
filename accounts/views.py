@@ -172,11 +172,17 @@ def reset_password(request):
 
 
 
-
 @login_required
 def cart_history(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'cart_history.html', {'orders': orders})
+    orders = (
+        Order.objects
+        .filter(user=request.user)
+        .prefetch_related("items__product", "items__product__images")
+        .order_by("-created_at")
+    )
+    return render(request, "cart_history.html", {
+        "orders": orders
+    })
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -1036,7 +1042,7 @@ def place_order(request):
         messages.error(request, str(e))
         return redirect("cart")
 
-        
+
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 

@@ -130,41 +130,38 @@
 
   <!-- PRODUCTS -->
   {% for item in order.items.all %}
-  <div class="product-row">
-    {% if item.product %}
-    {% if item.product.image %}
-        <img src="{{ item.product.image.url }}">
-    {% elif item.product.images.first %}
-        <img src="{{ item.product.images.first.image.url }}">
-    {% else %}
-        <img src="{% static 'default_product.jpg' %}">
-    {% endif %}
-{% else %}
-    <img src="{% static 'default_product.jpg' %}">
-{% endif %}
+<div class="product-row">
 
-    <div class="product-info">
-      <b>{{ item.product_name }}</b>
-      {% if item.size %}({{ item.size }}){% endif %}<br>
-      Qty: {{ item.quantity }} × ₹{{ item.price }}
+  {% if item.product and item.product.images.exists %}
+      <img src="{{ item.product.images.all.0.image.url }}">
+  {% elif item.product and item.product.image %}
+      <img src="{{ item.product.image.url }}">
+  {% else %}
+      <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
+  {% endif %}
 
-      {% if order.status == "delivered" %}
-        {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
-        <div class="action-links">
-          <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
-          <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
-          <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
-        </div>
-        {% else %}
-        <div class="request-status {{ item.request_status }}">
-          {{ item.request_status|capfirst }}
-          ({{ item.request_date }})
-        </div>
-        {% endif %}
+  <div class="product-info">
+    <b>{{ item.product_name }}</b>
+    {% if item.size %}({{ item.size }}){% endif %}<br>
+    Qty: {{ item.quantity }} × ₹{{ item.price }}
+
+    {% if order.status == "delivered" %}
+      {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
+      <div class="action-links">
+        <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
+        <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
+        <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
+      </div>
+      {% else %}
+      <div class="request-status {{ item.request_status }}">
+        {{ item.request_status|capfirst }}
+        ({{ item.request_date|date:"d M Y" }})
+      </div>
       {% endif %}
-    </div>
+    {% endif %}
   </div>
-  {% endfor %}
+</div>
+{% endfor %}
 
   {% if order.status == "pending" %}
   <form method="POST" action="{% url 'cancel_order' order.id %}">
