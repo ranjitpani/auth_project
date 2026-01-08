@@ -100,22 +100,23 @@
 }
 </style>
 
+
+
 <div class="orders-container">
 <h2 style="margin-bottom:14px;">📦 My Orders</h2>
 
 {% for order in orders %}
-
 <div class="order-card">
 
   <!-- ORDER HEADER -->
   <div class="order-header">
-    <div class="order-id">Order #{{ order.id }}</div>
+    <div class="order-id">Order #{{ order.order_uid }}</div>
     <div class="status-badge status-{{ order.status }}">
       {{ order.get_status_display }}
     </div>
   </div>
 
-  <div style="font-size:13px;margin-top:6px; color: #28a745;">
+  <div style="font-size:13px;margin-top:6px; color:#28a745;">
     💳 {{ order.get_payment_method_display }} |
     💰 ₹ {{ order.total_amount }}
   </div>
@@ -126,47 +127,35 @@
   {% for item in order.items.all %}
   <div class="product-row">
 
-    {% if item.product %}
-        {% with images=item.product.images.all %}
-            {% if images|length > 0 %}
-                <img src="{{ images.0.image.url }}">
-            {% elif item.product.image %}
-                <img src="{{ item.product.image.url }}">
-            {% elif item.product_image %}
-                <img src="{{ item.product_image }}">
-            {% else %}
-                <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
-            {% endif %}
-        {% endwith %}
-    {% elif item.product_image %}
-        <img src="{{ item.product_image }}">
+    {% if item.product_image %}
+      <img src="{{ item.product_image }}">
+    {% elif item.product and item.product.image %}
+      <img src="{{ item.product.image.url }}">
     {% else %}
-        <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
+      <img src="{% static 'img/no-image.png' %}">
     {% endif %}
 
     <div class="product-info">
-        <b>{{ item.product_name }}</b>
-        {% if item.size %} ({{ item.size }}){% endif %}<br>
-        Qty: {{ item.quantity }} × ₹{{ item.price }}
+      <b>{{ item.product_name }}</b>
+      {% if item.size %} ({{ item.size }}){% endif %}<br>
+      Qty: {{ item.quantity }} × ₹{{ item.price }}
 
-        {% if order.status == "delivered" %}
-            {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
-            <div class="action-links">
-                <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
-                <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
-                <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
-            </div>
-            {% else %}
-            <div class="request-status {{ item.request_status }}">
-                {{ item.request_status|capfirst }}
-                {% if item.request_date %}
-                    ({{ item.request_date|date:"d M Y" }})
-                {% endif %}
-            </div>
-            {% endif %}
+      {% if order.status == "delivered" %}
+        {% if not item.return_requested and not item.exchange_requested %}
+        <div class="action-links">
+          <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
+          <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
+        </div>
+        {% else %}
+        <div class="request-status {{ item.request_status }}">
+          {{ item.request_status|capfirst }}
+          {% if item.request_date %}
+            ({{ item.request_date|date:"d M Y" }})
+          {% endif %}
+        </div>
         {% endif %}
+      {% endif %}
     </div>
-
   </div>
   {% endfor %}
 
@@ -178,10 +167,9 @@
   {% endif %}
 
 </div>
-</a>
 {% empty %}
 <p>No orders yet.</p>
 {% endfor %}
-</div>
 
+</div>
 {% endblock %}
