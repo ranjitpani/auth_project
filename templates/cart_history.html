@@ -110,7 +110,7 @@
   <!-- ORDER HEADER -->
   <div class="order-header">
     <div class="order-id">Order #{{ order.order_uid }}</div>
-    <div class="status-badge status-{{ order.status }}">
+    <div class="status-badge status-{{ order.status|lower }}">
       {{ order.get_status_display }}
     </div>
   </div>
@@ -129,7 +129,7 @@
     {% if item.product %}
         {% with images=item.product.images.all %}
             {% if images|length > 0 %}
-                <img src="{{ images.0.image.url }}">
+                <img src="{{ images.0.image.url|default:'#' }}">
             {% elif item.product.image %}
                 <img src="{{ item.product.image.url }}">
             {% elif item.product_image %}

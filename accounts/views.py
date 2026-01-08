@@ -178,19 +178,34 @@ from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Order
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Order
+from django.db.models import Prefetch
 
-@login_required
+@login_required(login_url='login')
 def cart_history(request):
-    orders = (
-        Order.objects
-        .filter(user=request.user)
-        .prefetch_related('items')
-        .order_by('-created_at')
-    )
+    try:
+        orders = (
+            Order.objects
+            .filter(user=request.user)
+            .prefetch_related(
+                Prefetch(
+                    'items',
+                    queryset=OrderItem.objects.select_related('product')
+                )
+            )
+            .order_by('-created_at')
+        )
+    except Exception as e:
+        print("ORDER HISTORY ERROR:", e)
+        orders = []
 
-    return render(request, 'cart_history.html', {
+    context = {
         'orders': orders
-    })
+    }
+    return render(request, 'cart_history.html', context)
+
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
