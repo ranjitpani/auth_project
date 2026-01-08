@@ -183,29 +183,30 @@ from django.contrib.auth.decorators import login_required
 from .models import Order
 from django.db.models import Prefetch
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.db.models import Prefetch
+from .models import Order, OrderItem
+
 @login_required(login_url='login')
 def cart_history(request):
-    try:
-        orders = (
-            Order.objects
-            .filter(user=request.user)
-            .prefetch_related(
-                Prefetch(
-                    'items',
-                    queryset=OrderItem.objects.select_related('product')
-                )
-            )
-            .order_by('-created_at')
+
+    orders = (
+        Order.objects
+        .filter(user=request.user)
+        .prefetch_related(
+            Prefetch(
+                'items',
+                queryset=OrderItem.objects.select_related('product')
+            ),
+            'items__product__images'
         )
-    except Exception as e:
-        print("ORDER HISTORY ERROR:", e)
-        orders = []
+        .order_by('-created_at')
+    )
 
-    context = {
+    return render(request, 'cart_history.html', {
         'orders': orders
-    }
-    return render(request, 'cart_history.html', context)
-
+    })
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -1030,6 +1031,7 @@ def place_order(request):
             shipping_cost=delivery_total,
             total_amount=total_amount,
             payment_method=payment_method,
+            status="pending",
             delivery_name=address.name,
             delivery_phone=address.mobile,
             delivery_address=address.address,

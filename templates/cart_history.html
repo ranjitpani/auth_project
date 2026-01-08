@@ -117,7 +117,7 @@
 
   <div style="font-size:13px;margin-top:6px; color: #28a745;">
     💳 {{ order.get_payment_method_display }} |
-    💰 ₹ {{ order.total_amount }}
+    💰 ₹ {{ order.total_amount|floatformat:2 }}
   </div>
 
   <hr>
