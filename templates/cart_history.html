@@ -132,40 +132,46 @@
   {% for item in order.items.all %}
 <div class="product-row">
 
-  {% if item.product and item.product.images.all %}
-    {% with img=item.product.images.all|first %}
-        {% if img %}
-            <img src="{{ img.image.url }}">
+{% if item.product %}
+    {% with images=item.product.images.all %}
+        {% if images|length > 0 %}
+            <img src="{{ images.0.image.url }}">
+        {% elif item.product.image %}
+            <img src="{{ item.product.image.url }}">
+        {% elif item.product_image %}
+            <img src="{{ item.product_image }}">
         {% else %}
             <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
         {% endif %}
     {% endwith %}
-{% elif item.product and item.product.image %}
-    <img src="{{ item.product.image.url }}">
+{% elif item.product_image %}
+    <img src="{{ item.product_image }}">
 {% else %}
     <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png">
 {% endif %}
 
-  <div class="product-info">
+<div class="product-info">
     <b>{{ item.product_name }}</b>
-    {% if item.size %}({{ item.size }}){% endif %}<br>
+    {% if item.size %} ({{ item.size }}){% endif %}<br>
     Qty: {{ item.quantity }} × ₹{{ item.price }}
 
     {% if order.status == "delivered" %}
-      {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
-      <div class="action-links">
-        <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
-        <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
-        <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
-      </div>
-      {% else %}
-      <div class="request-status {{ item.request_status }}">
-        {{ item.request_status|capfirst }}
-        ({{ item.request_date|date:"d M Y" }})
-      </div>
-      {% endif %}
+        {% if not item.return_requested and not item.refund_requested and not item.exchange_requested %}
+        <div class="action-links">
+            <a href="{% url 'request_order_action' item.id 'return' %}">Return</a>
+            <a href="{% url 'request_order_action' item.id 'refund' %}">Refund</a>
+            <a href="{% url 'request_order_action' item.id 'exchange' %}">Exchange</a>
+        </div>
+        {% else %}
+        <div class="request-status {{ item.request_status }}">
+            {{ item.request_status|capfirst }}
+            {% if item.request_date %}
+                ({{ item.request_date|date:"d M Y" }})
+            {% endif %}
+        </div>
+        {% endif %}
     {% endif %}
-  </div>
+</div>
 </div>
 {% endfor %}
 

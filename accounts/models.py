@@ -407,22 +407,28 @@ class OrderItem(models.Model):
         if self.product:
             if not self.product_name:
                 self.product_name = self.product.name
+
             if not self.store_name and self.product.store:
                 self.store_name = self.product.store.name
+
             if not self.category_name and self.product.category:
                 self.category_name = self.product.category.name
+
             if not self.product_sku:
                 try:
-                    self.product_sku = self.product.stocks.first().sku if self.product.stocks.exists() else None
-                except:
+                    stock = self.product.stocks.first()
+                    self.product_sku = stock.sku if stock else None
+                except Exception:
                     self.product_sku = None
-        # Image snapshot
+
+            # 🔥 IMAGE SNAPSHOT (SAFE)
             if not self.product_image:
                 try:
-                    if self.product and self.product.image:
+                    if self.product.image:
                         self.product_image = self.product.image.url
                 except Exception:
                     self.product_image = None
+
         super().save(*args, **kwargs)
     # =====================
     # GST Calculation
