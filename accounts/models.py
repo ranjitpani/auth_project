@@ -247,7 +247,8 @@ class UserAddress(models.Model):
     state = models.CharField(max_length=100, default="", blank=True)
     district = models.CharField(max_length=100, default="", blank=True)
     block = models.CharField(max_length=100, default="", blank=True)
-
+    village = models.CharField(max_length=100, blank=True, null=True)
+    room_no = models.CharField(max_length=50, blank=True, null=True)
     address = models.TextField()
     latitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True

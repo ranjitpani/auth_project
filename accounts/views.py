@@ -1219,46 +1219,6 @@ def checkout_address(request):
 
 
 
-# @login_required
-# def save_address(request):
-#     if request.method == 'POST':
-
-#         # 🔥 If address already exists → just mark default
-#         existing = UserAddress.objects.filter(
-#             user=request.user,
-#             mobile=request.POST.get('mobile'),
-#             pincode=request.POST.get('pincode'),
-#             address=request.POST.get('address')
-#         ).first()
-
-#         # make all old addresses non-default
-#         UserAddress.objects.filter(
-#             user=request.user,
-#             is_default=True
-#         ).update(is_default=False)
-
-#         if existing:
-#             existing.is_default = True
-#             existing.save()
-#         else:
-#             UserAddress.objects.create(
-#                 user=request.user,
-#                 name=request.POST.get('name'),
-#                 mobile=request.POST.get('mobile'),
-#                 alt_mobile=request.POST.get('alt_mobile'),
-#                 pincode=request.POST.get('pincode'),
-#                 state=request.POST.get('state'),
-#                 district=request.POST.get('district'),
-#                 block=request.POST.get('block'),
-#                 address=request.POST.get('address'),
-#                 latitude=request.POST.get('latitude'),
-#                 longitude=request.POST.get('longitude'),
-#                 is_default=True
-#             )
-
-#         if 'checkout_type' not in request.session:
-#             request.session['checkout_type'] = 'cart'
-
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -1269,51 +1229,39 @@ from .utils import calculate_km_delivery_charge
 @login_required
 def save_address(request):
     if request.method == 'POST':
-        lat = request.POST.get('latitude') or 0
-        lng = request.POST.get('longitude') or 0
 
-        # Make all old addresses non-default
-        UserAddress.objects.filter(user=request.user, is_default=True).update(is_default=False)
+        lat = request.POST.get('latitude')
+        lng = request.POST.get('longitude')
 
-        # Check if same address exists
-        existing = UserAddress.objects.filter(
+        if not lat or not lng:
+            messages.error(request, "Location not detected. Please use GPS.")
+            return redirect('checkout_address')
+
+        UserAddress.objects.filter(
             user=request.user,
+            is_default=True
+        ).update(is_default=False)
+
+        UserAddress.objects.create(
+            user=request.user,
+            name=request.POST.get('name'),
             mobile=request.POST.get('mobile'),
+            alt_mobile=request.POST.get('alt_mobile'),
             pincode=request.POST.get('pincode'),
-            address=request.POST.get('address')
-        ).first()
+            state=request.POST.get('state'),
+            district=request.POST.get('district'),
+            block=request.POST.get('block'),
+            village=request.POST.get('village'),
+            room_no=request.POST.get('room_no'),
+            address=request.POST.get('address'),
+            latitude=lat,
+            longitude=lng,
+            is_default=True
+        )
 
-        if existing:
-            # Update existing
-            existing.latitude = lat
-            existing.longitude = lng
-            existing.state = request.POST.get('state')
-            existing.district = request.POST.get('district')
-            existing.block = request.POST.get('block')
-            existing.is_default = True
-            existing.save()
-        else:
-            # Create new
-            UserAddress.objects.create(
-                user=request.user,
-                name=request.POST.get('name'),
-                mobile=request.POST.get('mobile'),
-                alt_mobile=request.POST.get('alt_mobile'),
-                pincode=request.POST.get('pincode'),
-                state=request.POST.get('state'),
-                district=request.POST.get('district'),
-                block=request.POST.get('block'),
-                address=request.POST.get('address'),
-                latitude=lat,
-                longitude=lng,
-                is_default=True
-            )
-
-        if 'checkout_type' not in request.session:
-            request.session['checkout_type'] = 'cart'
-
+        request.session['checkout_type'] = 'cart'
         return redirect('checkout_summary')
-
+    
 
 from .models import Product, UserAddress
 
@@ -1323,124 +1271,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
-# @login_required
-# def checkout_summary(request):
-#     checkout_type = request.session.get('checkout_type', 'cart')
 
-#     address = UserAddress.objects.filter(
-#         user=request.user,
-#         is_default=True
-#     ).first()
-
-#     if not address:
-#         messages.info(request, "Please add delivery address")
-#         return redirect('checkout_address')
-
-#     items = []
-#     total_amount = Decimal(0)
-#     original_total = Decimal(0)
-
-#     product_delivery_total = Decimal(0)
-#     km_delivery_total = Decimal(0)
-#     max_distance_km = Decimal(0)
-
-#     user_lat = Decimal(address.latitude or 0)
-#     user_lng = Decimal(address.longitude or 0)
-#     # ================= BUY NOW =================
-#     if checkout_type == 'buy_now' and request.session.get('buy_now'):
-#         buy = request.session['buy_now']
-#         product = get_object_or_404(Product, id=buy['product_id'])
-
-#         qty = buy.get('qty', 1)
-#         price = product.discounted_price or product.price
-#         item_total = price * qty
-
-#         original_total = product.price * qty
-#         total_amount = item_total
-
-#         product_delivery = Decimal(product.delivery_charge or 0)
-
-#         store_lat = Decimal(product.store.latitude or 0)
-#         store_lng = Decimal(product.store.longitude or 0)
-
-#         distance_km, km_charge = calculate_km_delivery_charge(
-#             store_lat, store_lng, user_lat, user_lng
-#         )
-
-#         product_delivery_total += product_delivery
-#         km_delivery_total += km_charge
-#         max_distance_km = distance_km
-
-#         items.append({
-#             'product': product,
-#             'size': buy['size'],
-#             'qty': qty,
-#             'price': price,
-#             'item_total': item_total,
-#             'product_delivery': product_delivery,
-#             'km_delivery': km_charge,
-#             'distance_km': distance_km,
-#         })
-
-#     # ================= CART =================
-#     else:
-#         cart = request.session.get('cart', {})
-#         if not cart:
-#             messages.warning(request, "Your cart is empty")
-#             return redirect('cart')
-
-#         for key, qty in cart.items():
-#             product_id, size = key.split('_')
-#             product = get_object_or_404(Product, id=product_id)
-
-#             price = product.discounted_price or product.price
-#             item_total = price * qty
-
-#             original_total += product.price * qty
-#             total_amount += item_total
-
-#             product_delivery = Decimal(product.delivery_charge or 0)
-
-#             store_lat = Decimal(product.store.latitude or 0)
-#             store_lng = Decimal(product.store.longitude or 0)
-
-#             distance_km, km_charge = calculate_km_delivery_charge(
-#                 store_lat, store_lng, user_lat, user_lng
-#             )
-
-#             product_delivery_total += product_delivery
-#             km_delivery_total += km_charge
-#             max_distance_km = max(max_distance_km, distance_km)
-
-#             items.append({
-#                 'product': product,
-#                 'size': size,
-#                 'qty': qty,
-#                 'price': price,
-#                 'item_total': item_total,
-#                 'product_delivery': product_delivery,
-#                 'km_delivery': km_charge,
-#                 'distance_km': distance_km,
-#             })
-
-#     discount = original_total - total_amount
-#     delivery_total = product_delivery_total + km_delivery_total
-#     grand_total = total_amount + delivery_total
-
-#     # save for payment
-#     request.session['order_total'] = float(grand_total)
-#     request.session['delivery_charge'] = float(delivery_total)
-
-#     return render(request, 'checkout/summary.html', {
-#         'address': address,
-#         'items': items,
-#         'original_price': original_total,
-#         'discount': discount,
-#         'product_delivery_total': product_delivery_total,
-#         'km_delivery_total': km_delivery_total,
-#         'distance_km': max_distance_km,
-#         'total_amount': grand_total,
-#     })
 @login_required
 def checkout_summary(request):
     checkout_type = request.session.get('checkout_type', 'cart')
@@ -1544,110 +1375,9 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Product
 
-# 🔹 OPTIONAL: KM delivery calculation function (same as checkout_summary)
 
 from decimal import Decimal
 
-# @login_required
-# def checkout_payment(request):
-
-#     # 📍 Save user location
-#     # lat = request.POST.get("latitude")
-#     # lng = request.POST.get("longitude")
-#     # if lat and lng:
-#     #     request.session["order_latitude"] = lat
-#     #     request.session["order_longitude"] = lng
-
-#     checkout_type = request.session.get('checkout_type', 'cart')
-
-#     items = []
-#     subtotal = Decimal('0.00')
-#     product_delivery_total = Decimal('0.00')
-#     km_delivery_total = Decimal('0.00')
-
-#     user_lat = Decimal(request.session.get("order_latitude") or 0)
-#     user_lng = Decimal(request.session.get("order_longitude") or 0)
-
-#     # ================= BUY NOW =================
-#     if checkout_type == 'buy_now' and request.session.get('buy_now'):
-#         buy = request.session['buy_now']
-#         product = get_object_or_404(Product, id=buy['product_id'])
-
-#         qty = buy.get('qty', 1)
-#         price = product.discounted_price or product.price
-#         item_total = price * qty
-#         subtotal += item_total
-
-#         store_lat = Decimal(product.store.latitude or 0)
-#         store_lng = Decimal(product.store.longitude or 0)
-
-#         distance_km, km_charge = calculate_km_delivery_charge(
-#             store_lat, store_lng, user_lat, user_lng
-#         )
-
-#         product_delivery = Decimal(product.delivery_charge or 0)
-
-#         product_delivery_total += product_delivery
-#         km_delivery_total += km_charge
-
-#         items.append({
-#             'product': product,
-#             'size': buy['size'],
-#             'quantity': qty,
-#             'total_price': item_total,
-#             'distance_km': distance_km,
-#         })
-
-#     # ================= CART =================
-#     else:
-#         cart = request.session.get('cart', {})
-#         for key, qty in cart.items():
-#             try:
-#                 product_id, size = key.split('_')
-#             except ValueError:
-#                 continue
-
-#             product = get_object_or_404(Product, id=product_id)
-
-#             price = product.discounted_price or product.price
-#             item_total = price * qty
-#             subtotal += item_total
-
-#             store_lat = Decimal(product.store.latitude or 0)
-#             store_lng = Decimal(product.store.longitude or 0)
-
-#             distance_km, km_charge = calculate_km_delivery_charge(
-#                 store_lat, store_lng, user_lat, user_lng
-#             )
-
-#             product_delivery = Decimal(product.delivery_charge or 0)
-
-#             product_delivery_total += product_delivery
-#             km_delivery_total += km_charge
-
-#             items.append({
-#                 'product': product,
-#                 'size': size,
-#                 'quantity': qty,
-#                 'total_price': item_total,
-#                 'distance_km': distance_km,
-#             })
-
-#     delivery_total = product_delivery_total + km_delivery_total
-#     total_amount = subtotal + delivery_total
-
-#     # save for order
-#     request.session['delivery_charge'] = float(delivery_total)
-#     request.session['order_total'] = float(total_amount)
-
-#     return render(request, 'checkout/payment.html', {
-#         'cart_items': items,
-#         'subtotal': subtotal,
-#         'product_delivery_total': product_delivery_total,
-#         'km_delivery_total': km_delivery_total,
-#         'delivery_charge': delivery_total,
-#         'total_amount': total_amount
-#     })
 @login_required
 def checkout_payment(request):
     checkout_type = request.session.get('checkout_type', 'cart')
@@ -1727,11 +1457,7 @@ from .models import UserAddress
 
 @login_required
 def edit_address(request, address_id):
-    address = get_object_or_404(
-        UserAddress,
-        id=address_id,
-        user=request.user
-    )
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
 
     if request.method == "POST":
         address.name = request.POST.get("name")
@@ -1741,25 +1467,23 @@ def edit_address(request, address_id):
         address.state = request.POST.get("state")
         address.district = request.POST.get("district")
         address.block = request.POST.get("block")
+        address.village = request.POST.get("village")
+        address.room_no = request.POST.get("room_no")
         address.address = request.POST.get("address")
 
-        # ✅ SAFE LAT / LNG UPDATE (KM FIX)
         lat = request.POST.get("latitude")
         lng = request.POST.get("longitude")
 
         if lat and lng:
             address.latitude = lat
             address.longitude = lng
-        # else → old lat/lng remains (VERY IMPORTANT)
 
         address.save()
         return redirect("checkout_summary")
 
-    return render(
-        request,
-        "checkout/edit_address.html",
-        {"address": address}
-    )
+    return render(request, "checkout/edit_address.html", {"address": address})
+
+
 # views.py
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required

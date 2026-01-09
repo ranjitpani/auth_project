@@ -174,6 +174,14 @@ textarea:focus{
         <label>Village / Block</label>
         <input type="text" name="block" id="block" value="{{ address.block }}" required>
       </div>
+      <div class="form-group">
+<label>Village</label>
+<input type="text" name="village" value="{{ address.village }}">
+</div>
+<div class="form-group">
+<label>Room / House No</label>
+<input type="text" name="room_no" value="{{ address.room_no }}">
+</div>
       <input type="hidden" name="latitude" id="latitude" value="{{ address.latitude }}">
       <input type="hidden" name="longitude" id="longitude" value="{{ address.longitude }}">
       <button type="button"
