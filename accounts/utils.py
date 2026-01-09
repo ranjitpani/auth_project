@@ -113,32 +113,39 @@ def send_otp_email(email, otp, purpose="verify"):
 from math import radians, cos, sin, asin, sqrt
 from decimal import Decimal
 
+from decimal import Decimal
+from math import radians, sin, cos, sqrt, asin
+
 def calculate_distance_km(lat1, lon1, lat2, lon2):
+    # Ensure values exist
     if not lat1 or not lon1 or not lat2 or not lon2:
         return Decimal(0)
-
+    
+    # convert to float
     lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])
-
+    
+    # convert degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    
+    # Haversine formula
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
-    km = 6371 * c
-
+    km = 6371 * c  # Earth radius
     return Decimal(str(round(km, 2)))
 
-
 def calculate_km_delivery_charge(store_lat, store_lng, user_lat, user_lng):
-    distance_km = calculate_distance_km(
-        store_lat, store_lng, user_lat, user_lng
-    )
-
-    # 🔥 example logic
+    distance_km = calculate_distance_km(store_lat, store_lng, user_lat, user_lng)
+    
+    # ----------- NEW TIERED DELIVERY CHARGE -----------
     if distance_km <= 2:
         charge = Decimal(20)
+    elif distance_km <= 3:
+        charge = Decimal(30)
+    elif distance_km <= 4:
+        charge = Decimal(40)
     else:
-        charge = Decimal(20) + (distance_km - 2) * Decimal(10)
-
+        charge = Decimal(40)  # Max delivery charge for >4 km
+    
     return distance_km, charge

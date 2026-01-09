@@ -94,6 +94,14 @@
 .cancel-btn:hover {
   background:#b52a37;
 }
+.order-link {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.order-link * {
+  text-decoration: none !important;
+}
 /* ===== MOBILE ===== */
 @media(max-width:480px){
   .order-card{padding:12px;}
@@ -104,7 +112,7 @@
 <h2 style="margin-bottom:14px;">📦 My Orders</h2>
 
 {% for order in orders %}
-
+<a href="{% url 'order_detail' order.id %}" class="order-link">
 <div class="order-card">
 
   <!-- ORDER HEADER -->
@@ -169,7 +177,8 @@
 
   </div>
   {% endfor %}
-
+</div>
+</a>
   {% if order.status == "pending" %}
   <form method="POST" action="{% url 'cancel_order' order.id %}">
     {% csrf_token %}
