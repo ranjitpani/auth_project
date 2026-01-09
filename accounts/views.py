@@ -1721,26 +1721,45 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import UserAddress  # jaha address model achhi
 from django.contrib.auth.decorators import login_required
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import UserAddress
+
 @login_required
 def edit_address(request, address_id):
-    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    address = get_object_or_404(
+        UserAddress,
+        id=address_id,
+        user=request.user
+    )
 
     if request.method == "POST":
         address.name = request.POST.get("name")
         address.mobile = request.POST.get("mobile")
         address.alt_mobile = request.POST.get("alt_mobile")
         address.pincode = request.POST.get("pincode")
-
-    # ✅ USER INPUT — FINAL
         address.state = request.POST.get("state")
         address.district = request.POST.get("district")
-        address.block = request.POST.get("block")   # 🔥 THIS LINE IS KEY
+        address.block = request.POST.get("block")
         address.address = request.POST.get("address")
+
+        # ✅ SAFE LAT / LNG UPDATE (KM FIX)
+        lat = request.POST.get("latitude")
+        lng = request.POST.get("longitude")
+
+        if lat and lng:
+            address.latitude = lat
+            address.longitude = lng
+        # else → old lat/lng remains (VERY IMPORTANT)
 
         address.save()
         return redirect("checkout_summary")
-    return render(request, 'checkout/edit_address.html', {'address': address})
 
+    return render(
+        request,
+        "checkout/edit_address.html",
+        {"address": address}
+    )
 # views.py
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
