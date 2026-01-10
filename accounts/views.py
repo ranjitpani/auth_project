@@ -1064,7 +1064,7 @@ def place_order(request):
     except Exception as e:
         transaction.set_rollback(True)
         messages.error(request, str(e))
-        return redirect("cart")
+        return redirect("checkout_summary")
 
 
 from django.http import HttpResponse
@@ -1259,8 +1259,11 @@ def save_address(request):
             is_default=True
         )
 
-        request.session['checkout_type'] = 'cart'
-        return redirect('checkout_summary')
+        # keep existing checkout type
+        if not request.session.get("checkout_type"):
+            request.session["checkout_type"] = "cart"
+
+        return redirect("checkout_summary")
     
 
 from .models import Product, UserAddress

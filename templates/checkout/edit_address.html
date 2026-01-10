@@ -1,363 +1,239 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edit Address</title>
+<title>Edit Delivery Address</title>
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-}
-
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:#f4f6fb;
+  background:#eef2ff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
 }
-
-.page{
-  padding:16px;
-  padding-bottom:120px;
-  animation:fadeUp .3s ease;
-}
-
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.card{
+.form-box{
+  padding:20px;
   background:#fff;
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 12px 26px rgba(0,0,0,.08);
+  min-height:100vh;
 }
-
-h3{
-  margin:0 0 14px;
-  font-size:18px;
-  font-weight:800;
-  color:#0f172a;
-}
-
-.form-group{
-  margin-bottom:14px;
-}
-
-label{
-  display:block;
-  font-size:13px;
-  font-weight:700;
-  color:#475569;
-  margin-bottom:6px;
-}
-
-input, textarea{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:1.6px solid #e2e8f0;
-  font-size:15px;
-  outline:none;
-  transition:.2s;
-}
-
-textarea{
-  min-height:90px;
-  resize:none;
-}
-
-input:focus,
-textarea:focus{
-  border-color:#2563eb;
-  box-shadow:0 0 0 3px rgba(37,99,235,.12);
-}
-
-.row{
-  display:flex;
-  gap:12px;
-}
-
-.row .form-group{
-  flex:1;
-}
-
-.fixed-bottom{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:#fff;
-  padding:14px 16px;
-  box-shadow:0 -8px 22px rgba(0,0,0,.15);
-}
-
-.save-btn{
-  width:100%;
-  padding:16px;
-  border-radius:18px;
-  border:none;
-  font-size:16px;
-  font-weight:900;
-  color:#fff;
-  background:linear-gradient(135deg,#2563eb,#1e40af);
-  cursor:pointer;
-}
-
-.save-btn:active{
-  transform:scale(.98);
-}
-
 @media(min-width:768px){
-  .page{
-    max-width:520px;
-    margin:20px auto;
+  .form-box{
+    max-width:420px;
+    margin:30px auto;
+    border-radius:18px;
+    box-shadow:0 15px 35px rgba(0,0,0,.1);
   }
 }
+input,textarea{
+  width:100%;
+  padding:16px;
+  margin-bottom:14px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#f9fafb;
+  font-size:15px;
+}
+.row{display:flex;gap:10px}
+.row input{flex:1}
+.btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  font-size:16px;
+  font-weight:800;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#2563eb,#1e40af);
+  color:#fff;
+}
+.btn-location{
+  background:#eef2ff;
+  border:2px dashed #c7d2fe;
+  color:#1e40af;
+  margin-bottom:12px;
+}
+.map-box{
+  height:260px;
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.note{
+  font-size:12px;
+  color:#64748b;
+  margin-bottom:10px;
+}
+.search-wrap{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+.search-wrap input{flex:1}
+.search-wrap button{
+  padding:0 18px;
+  border:none;
+  border-radius:14px;
+  background:#2563eb;
+  color:#fff;
+  font-weight:700;
+}
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
 <body>
 
-<div class="page">
-  <div class="card">
-    <h3>Edit Delivery Address</h3>
+{% include "checkout/steps.html" with step=1 %}
 
-    <form method="post">
-      {% csrf_token %}
+<form method="post" class="form-box">
+{% csrf_token %}
 
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" name="name" value="{{ address.name }}" required>
-      </div>
+<input name="name" value="{{ address.name }}" placeholder="Full Name" required>
+<input name="mobile" value="{{ address.mobile }}" placeholder="Mobile Number" required maxlength="10">
+<input name="alt_mobile" value="{{ address.alt_mobile }}" placeholder="Alternate Mobile">
 
-      <div class="row">
-        <div class="form-group">
-          <label>Mobile Number</label>
-          <input type="tel" name="mobile" value="{{ address.mobile }}" required>
-        </div>
+<input name="pincode" id="pincode" value="{{ address.pincode }}" placeholder="Pincode" required>
 
-        <div class="form-group">
-          <label>Alternate Mobile</label>
-          <input type="tel" name="alt_mobile" value="{{ address.alt_mobile }}">
-        </div>
-      </div>
-
-      <div class="form-group">
-  <label>Pincode</label>
-  <input type="text" name="pincode" id="pincode"
-         value="{{ address.pincode }}" required>
-
-  <!-- loader + error -->
-  <p id="pin-loader" style="display:none;font-size:13px;color:#2563eb;margin-top:6px;">
-    🔄 Fetching location…
-  </p>
-  <p id="pin-error" style="display:none;font-size:13px;color:#dc2626;margin-top:6px;">
-    ❌ Invalid pincode
-  </p>
+<div class="row">
+  <input name="state" id="state" value="{{ address.state }}" placeholder="State">
+  <input name="district" id="district" value="{{ address.district }}" placeholder="District">
 </div>
 
-      <div class="row">
-        <div class="form-group">
-          <label>State</label>
-          <input type="text" name="state" id="state" value="{{ address.state }}" required>
-        </div>
+<input name="block" id="block" value="{{ address.block }}" placeholder="Block">
+<input name="village" id="village" value="{{ address.village }}" placeholder="Village">
+<input name="room_no" value="{{ address.room_no }}" placeholder="House / Room No">
 
-        <div class="form-group">
-          <label>District</label>
-          <input type="text" name="district" id="district" value="{{ address.district }}" required>
-        </div>
-      </div>
+<textarea name="address" id="address" placeholder="Street / Landmark" required>
+{{ address.address }}
+</textarea>
 
-      <div class="form-group">
-        <label>Village / Block</label>
-        <input type="text" name="block" id="block" value="{{ address.block }}" required>
-      </div>
-      <div class="form-group">
-<label>Village</label>
-<input type="text" name="village" value="{{ address.village }}">
+<input type="hidden" name="latitude" id="lat" value="{{ address.latitude }}">
+<input type="hidden" name="longitude" id="lng" value="{{ address.longitude }}">
+
+<p class="note">🔍 Search / tap map / current location</p>
+
+<div class="search-wrap">
+  <input type="text" id="searchBox" placeholder="Search village, city, landmark">
+  <button type="button" onclick="searchLocation()">Search</button>
 </div>
-<div class="form-group">
-<label>Room / House No</label>
-<input type="text" name="room_no" value="{{ address.room_no }}">
-</div>
-      <input type="hidden" name="latitude" id="latitude" value="{{ address.latitude }}">
-      <input type="hidden" name="longitude" id="longitude" value="{{ address.longitude }}">
-      <button type="button"
-        onclick="getLocation()"
-        style="
-          width:100%;
-          margin-top:6px;
-          padding:12px;
-          border-radius:14px;
-          border:2px dashed #c7d2fe;
-          background:#eef2ff;
-          color:#1e40af;
-          font-weight:700;
-          cursor:pointer;">
-  📍 Use My Current Location
+
+<div class="map-box" id="map"></div>
+
+<button type="button" class="btn btn-location" onclick="useMyLocation()">
+📍 Use My Current Location
 </button>
-<p style="font-size:12px;color:#64748b;margin-top:6px;">
-  📍 Location is approximate. Please verify address before saving.
-</p>
- 
-      <div class="form-group">
-        <label>Full Address</label>
-        <textarea name="address" required>{{ address.address }}</textarea>
-      </div>
 
-      <!-- bottom fixed button -->
-      <div class="fixed-bottom">
-        <button type="submit" class="save-btn">
-          Save & Continue →
-        </button>
-      </div>
+<button type="submit" class="btn btn-primary">
+Update Address →
+</button>
 
-    </form>
-  </div>
-</div>
+</form>
 
 <script>
-/* -------- PINCODE AUTO FILL (INDIA POST API) -------- */
-document.getElementById("pincode").addEventListener("blur", function () {
-  const pin = this.value.trim();
+let map, marker;
 
-  if (pin.length !== 6 || isNaN(pin)) return;
+/* INIT MAP WITH EXISTING LOCATION */
+document.addEventListener("DOMContentLoaded",()=>{
+  const lat = parseFloat("{{ address.latitude|default:'20.5937' }}");
+  const lng = parseFloat("{{ address.longitude|default:'78.9629' }}");
+  const zoom = lat && lng ? 16 : 5;
 
-  fetch(`https://api.postalpincode.in/pincode/${pin}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data[0].Status !== "Success") return;
+  map = L.map("map").setView([lat,lng],zoom);
 
-      const postOffice = data[0].PostOffice[0];
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    attribution:"&copy; OpenStreetMap"
+  }).addTo(map);
 
-      document.getElementById("state").value =
-        postOffice.State || "";
+  marker = L.marker([lat,lng],{draggable:true}).addTo(map);
 
-      document.getElementById("district").value =
-        postOffice.District || "";
+  map.on("click",e=>{
+    marker.setLatLng(e.latlng);
+    setLatLng(e.latlng.lat,e.latlng.lng);
+    reverseGeocode(e.latlng.lat,e.latlng.lng);
+  });
 
-      document.getElementById("block").value =
-        postOffice.Block || postOffice.Name || "";
-    })
-    .catch(err => console.log("Pincode error:", err));
+  marker.on("dragend",()=>{
+    const p = marker.getLatLng();
+    setLatLng(p.lat,p.lng);
+    reverseGeocode(p.lat,p.lng);
+  });
+
+  searchBox.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault(); searchLocation();}
+  });
 });
 
-
-const pincodeInput = document.getElementById("pincode");
-const stateInput = document.getElementById("state");
-const districtInput = document.getElementById("district");
-const blockInput = document.getElementById("block");
-
-const loader = document.getElementById("pin-loader");
-const errorMsg = document.getElementById("pin-error");
-
-/* ---------- PINCODE AUTO FILL ---------- */
-pincodeInput.addEventListener("blur", function () {
-  const pin = this.value.trim();
-
-  loader.style.display = "none";
-  errorMsg.style.display = "none";
-
-  if (pin.length !== 6 || isNaN(pin)) {
-    errorMsg.style.display = "block";
-    return;
-  }
-
-  loader.style.display = "block";
-
-  fetch(`https://api.postalpincode.in/pincode/${pin}`)
-    .then(res => res.json())
-    .then(data => {
-      loader.style.display = "none";
-
-      if (data[0].Status !== "Success") {
-        errorMsg.style.display = "block";
-        return;
-      }
-
-      const p = data[0].PostOffice[0];
-      stateInput.value = p.State || "";
-      districtInput.value = p.District || "";
-      blockInput.value = p.Block || p.Name || "";
-    })
-    .catch(() => {
-      loader.style.display = "none";
-      errorMsg.style.display = "block";
-    });
-});
-
-document.querySelector("form").addEventListener("submit", function(e){
-  const lat = document.getElementById("latitude").value;
-  const lng = document.getElementById("longitude").value;
-
-  if (lat && lng) return; // already present
-
-  e.preventDefault();
-
-  const fullAddress = `
-    ${document.querySelector("textarea[name='address']").value},
-    ${block.value},
-    ${district.value},
-    ${state.value},
-    India
-  `;
-
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`)
-    .then(res => res.json())
-    .then(data => {
-      if (!data.length) {
-        alert("Unable to detect location");
-        return;
-      }
-      document.getElementById("latitude").value = data[0].lat;
-      document.getElementById("longitude").value = data[0].lon;
-      e.target.submit();
-    });
-});
-
-/* ---------- GPS LOCATION ---------- */
-
-function getLocation() {
-  if (!navigator.geolocation) {
-    alert("Location not supported");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    function(pos){
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-
-      // 🔥 SAVE INTO FORM
-      document.getElementById("latitude").value = lat;
-      document.getElementById("longitude").value = lng;
-
-      // OPTIONAL: reverse geocode for UI
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.address) return;
-          const a = data.address;
-          document.getElementById("state").value = a.state || "";
-          document.getElementById("district").value =
-            a.state_district || a.county || "";
-          document.getElementById("block").value =
-            a.village || a.suburb || a.town || "";
-          if (a.postcode) {
-            document.getElementById("pincode").value = a.postcode;
-          }
-        });
-    },
-    function(){
-      alert("Location permission denied");
-    },
-    { enableHighAccuracy: true }
-  );
+/* SEARCH LOCATION */
+function searchLocation(){
+  let q = searchBox.value.trim();
+  if(!q){alert("Village / location lekha");return;}
+  const queries = [
+    q,
+    `${q}, ${block.value}`,
+    `${q}, ${district.value}`,
+    `${q}, ${state.value}`,
+    `${q}, India`
+  ];
+  searchFallback(queries,0);
 }
 
+function searchFallback(queries,i){
+  if(i>=queries.length){
+    alert("Location mililani, try district/state");
+    return;
+  }
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(queries[i])}`)
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d.length){searchFallback(queries,i+1);return;}
+    const lat=parseFloat(d[0].lat);
+    const lng=parseFloat(d[0].lon);
+    map.setView([lat,lng],16);
+    marker.setLatLng([lat,lng]);
+    setLatLng(lat,lng);
+    reverseGeocode(lat,lng);
+  });
+}
 
+/* SET LAT LNG */
+function setLatLng(lat,lng){
+  latInput.value = lat.toFixed(6);
+  lngInput.value = lng.toFixed(6);
+}
+const latInput=document.getElementById("lat");
+const lngInput=document.getElementById("lng");
+
+/* CURRENT LOCATION */
+function useMyLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude;
+    const lng=pos.coords.longitude;
+    map.setView([lat,lng],16);
+    marker.setLatLng([lat,lng]);
+    setLatLng(lat,lng);
+    reverseGeocode(lat,lng);
+  });
+}
+
+/* REVERSE GEOCODE */
+function reverseGeocode(lat,lng){
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d.address) return;
+    const a=d.address;
+    pincode.value=a.postcode||"";
+    state.value=a.state||"";
+    district.value=a.state_district||a.district||"";
+    block.value=a.county||a.suburb||"";
+    village.value=a.village||a.town||a.city||"";
+  });
+}
 </script>
 
 </body>
