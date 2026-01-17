@@ -27,7 +27,7 @@ class CustomUser(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100)
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     country = models.ForeignKey('Country', on_delete=models.SET_NULL, null=True, blank=True)
     state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True)
     district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
@@ -240,8 +240,8 @@ from django.db import models
 class UserAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=15)
-    alt_mobile = models.CharField(max_length=15, blank=True)
+    mobile = models.CharField(max_length=20)
+    alt_mobile = models.CharField(max_length=20, blank=True)
 
     pincode = models.CharField(max_length=6)
 
@@ -336,7 +336,7 @@ class Order(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     delivery_name = models.CharField(max_length=200, blank=True, null=True)
-    delivery_phone = models.CharField(max_length=15, blank=True, null=True)
+    delivery_phone = models.CharField(max_length=20, blank=True, null=True)
     delivery_address = models.TextField(blank=True, null=True)
     delivery_city = models.CharField(max_length=100, blank=True, null=True)
     delivery_postal_code = models.CharField(max_length=10, blank=True, null=True)
@@ -381,7 +381,7 @@ class OrderItem(models.Model):
     # GST Details (Snapshot)
     # ======================
     gst_number = models.CharField(
-        max_length=15,
+        max_length=20,
         blank=True,
         null=True,
         help_text="Seller GSTIN number"
@@ -488,7 +488,7 @@ class OrderItem(models.Model):
 class Seller(models.Model):
     name = models.CharField(max_length=255)
     address = models.TextField()
-    gst_number = models.CharField(max_length=15, blank=True, null=True)
+    gst_number = models.CharField(max_length=20, blank=True, null=True)
     contact = models.CharField(max_length=20, blank=True, null=True)
     return_policy = models.TextField(default="No returns/refunds after 7 days")
 
