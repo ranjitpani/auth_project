@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Delivery Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CHART JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --success:#16a34a;
+  --info:#0ea5e9;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:16px;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#fff;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header h2{font-size:22px}
+.notif{
+  position:relative;
+  font-size:22px;
+}
+.notif span{
+  position:absolute;
+  top:-6px;right:-8px;
+  background:red;
+  color:#fff;
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:999px;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+/* ===== BUTTON ===== */
+.btn{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  padding:10px 16px;
+  font-size:14px;
+  border-radius:12px;
+  text-decoration:none;
+  color:#fff;
+  background:var(--primary);
+  border:none;
+  width:100%;
+}
+
+/* ===== SUMMARY ===== */
+.summary p{margin:6px 0}
+
+/* ===== CALENDAR ===== */
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.day{
+  padding:12px;
+  background:#eef2ff;
+  border-radius:12px;
+  text-align:center;
+  font-size:13px;
+}
+.day.active{
+  background:#4f46e5;
+  color:#fff;
+}
+.day small{
+  display:block;
+  font-size:11px;
+  margin-top:4px;
+}
+
+/* ===== ORDER ITEM ===== */
+.order-item{
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.badge{
+  background:#dcfce7;
+  color:#166534;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:520px){
+  .calendar{gap:6px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>📅 Delivery Calendar</h2>
+      <p>Welcome <b>{{ request.user.first_name }}</b></p>
+    </div>
+    <div class="notif">
+      🔔
+      {% if notification_count %}
+        <span>{{ notification_count }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- DATE PICKER -->
+  <div class="card">
+    <form method="get">
+      <input type="date" name="date" value="{{ selected_date }}" style="width:100%;padding:10px;border-radius:10px">
+      <br><br>
+      <button class="btn">Show Orders</button>
+    </form>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="card summary">
+    <h3>🗓 {{ selected_date }}</h3>
+    <p>✔ Total Completed: <b>{{ total_orders }}</b></p>
+    <p>🚚 Normal: {{ total_normal }}</p>
+    <p>🔁 Return: {{ total_return }}</p>
+    <p>💰 Refund: {{ total_refund }}</p>
+    <p>🔄 Exchange: {{ total_exchange }}</p>
+  </div>
+
+  <!-- 📊 CHART -->
+  <div class="card">
+    <h3>📊 Daily Deliveries</h3>
+    <canvas id="deliveryChart" height="200"></canvas>
+  </div>
+
+  <!-- 📍 MONTH CALENDAR -->
+  <div class="card">
+    <h3>📍 Month View</h3>
+    <div class="calendar">
+  {% for date,count in calendar_data.items %}
+    <div class="day"
+         data-date="{{ date }}"
+         onclick="filterByDate('{{ date }}')">
+      {{ date|slice:"8:10" }}
+      <small>{{ count }} orders</small>
+    </div>
+  {% endfor %}
+</div>
+  </div>
+
+  <!-- ORDER LIST -->
+  <div class="card">
+    <h3>📦 Order Details</h3>
+    {% for order in date_orders %}
+      <div class="order-item">
+        <b>{{ order.order_uid }}</b><br>
+        {{ order.return_type|title }}
+        <span class="badge">Completed</span>
+      </div>
+    {% empty %}
+      <p>No orders</p>
+    {% endfor %}
+  </div>
+
+  <a href="{% url 'delivery-dashboard' %}" class="btn">⬅ Back to Dashboard</a>
+
+</div>
+
+<!-- CHART SCRIPT -->
+<script>
+const ctx = document.getElementById('deliveryChart');
+new Chart(ctx,{
+  type:'bar',
+  data:{
+    labels:[
+      {% for d in calendar_data.keys %}"{{ d|slice:"8:10" }}",{% endfor %}
+    ],
+    datasets:[{
+      label:'Orders',
+      data:[
+        {% for c in calendar_data.values %}{{ c }},{% endfor %}
+      ],
+      backgroundColor:'#4f46e5'
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}}
+  }
+});
+
+
+function filterByDate(date){
+  window.location.href = "?date=" + date;
+}
+
+
+fetch("/delivery/analytics/")
+.then(res => res.json())
+.then(data => {
+  const labels = data.weekly.map(i => i.day.slice(8,10));
+  const values = data.weekly.map(i => i.total);
+
+  new Chart(document.getElementById("deliveryChart"), {
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'Weekly Deliveries',
+        data:values,
+        borderColor:'#4f46e5',
+        tension:.4
+      }]
+    }
+  });
+});
+
+
+</script>
+
+</body>
+</html>

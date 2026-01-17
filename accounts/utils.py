@@ -149,3 +149,35 @@ def calculate_km_delivery_charge(store_lat, store_lng, user_lat, user_lng):
         charge = Decimal(40)  # Max delivery charge for >4 km
     
     return distance_km, charge
+
+def send_delivery_otp_email(order):
+    subject = "Delivery OTP - MofyCart"
+    html = f"""
+    <div style="font-family:Arial;max-width:520px;margin:auto">
+        <h2>Hello {order.user.first_name} 👋</h2>
+        <p>Your delivery OTP for order <b>{order.order_uid}</b> is:</p>
+
+        <div style="
+            font-size:32px;
+            font-weight:bold;
+            letter-spacing:4px;
+            background:#f4f6f8;
+            padding:16px;
+            text-align:center;
+            border-radius:8px;
+            margin:20px 0;
+        ">
+            {order.delivery_otp}
+        </div>
+
+        <p>Please share this OTP with delivery boy <b>only after receiving order</b>.</p>
+        <p>— Team MofyCart</p>
+    </div>
+    """
+
+    resend.Emails.send({
+        "from": "MofyCart <hello@mofycart.shop>",
+        "to": [order.user.email],
+        "subject": subject,
+        "html": html,
+    })

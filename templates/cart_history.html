@@ -42,6 +42,17 @@
 .status-returned {background:#ee2112;}
 .status-refunded {background:#f2250f;}
 .status-exchanged {background:#e13b16;}
+.status-assigned {
+  background:#17a2b8; /* blue */
+}
+
+.status-accepted {
+  background:#007bff;
+}
+
+.status-out_for_delivery {
+  background:#fd7e14;
+}
 /* ===== PRODUCT ===== */
 .product-row {
   display:flex;
@@ -127,6 +138,7 @@
     💳 {{ order.get_payment_method_display }} |
     💰 ₹ {{ order.total_amount|floatformat:2 }}
   </div>
+ 
 
   <hr>
 

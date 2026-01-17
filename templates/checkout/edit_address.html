@@ -221,19 +221,41 @@ function useMyLocation(){
 }
 
 /* REVERSE GEOCODE */
-function reverseGeocode(lat,lng){
+
+function reverseGeocode(lat, lng) {
   fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-  .then(r=>r.json())
-  .then(d=>{
-    if(!d.address) return;
-    const a=d.address;
-    pincode.value=a.postcode||"";
-    state.value=a.state||"";
-    district.value=a.state_district||a.district||"";
-    block.value=a.county||a.suburb||"";
-    village.value=a.village||a.town||a.city||"";
-  });
+    .then(r => r.json())
+    .then(d => {
+      if (!d.address) return;
+
+      const a = d.address;
+
+      // BASIC FIELDS
+      pincode.value  = a.postcode || "";
+      state.value    = a.state || "";
+      district.value = a.state_district || a.district || "";
+      block.value    = a.county || a.suburb || "";
+      village.value  = a.village || a.town || a.city || "";
+
+      // BUILD FULL ADDRESS
+      let fullAddressParts = [];
+
+      if (a.house_number) fullAddressParts.push(a.house_number);
+      if (a.road) fullAddressParts.push(a.road);
+      if (a.suburb) fullAddressParts.push(a.suburb);
+      if (a.village) fullAddressParts.push(a.village);
+      if (a.town && !a.village) fullAddressParts.push(a.town);
+      if (a.city && !a.town) fullAddressParts.push(a.city);
+      if (district.value) fullAddressParts.push(district.value);
+      if (state.value) fullAddressParts.push(state.value);
+      if (pincode.value) fullAddressParts.push(pincode.value);
+
+      // SET FULL ADDRESS TEXTAREA
+      document.getElementById("address").value =
+        fullAddressParts.join(", ");
+    });
 }
+
 </script>
 
 </body>

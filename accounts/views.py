@@ -1065,6 +1065,8 @@ def place_order(request):
         transaction.set_rollback(True)
         messages.error(request, str(e))
         return redirect("checkout_summary")
+    
+  
 
 
 from django.http import HttpResponse
@@ -1609,42 +1611,71 @@ def request_order_action(request, item_id, action):
 
 from django.contrib.admin.views.decorators import staff_member_required
 
+# @staff_member_required
+# def process_order_request(request, item_id, approve=True):
+#     item = get_object_or_404(OrderItem, id=item_id)
+
+#     if approve:
+#         item.request_status = "approved"
+#         item.processed_date = timezone.now()
+
+#         # ✅ RETURN → STOCK ADD
+#         if item.return_requested:
+#             if item.product and item.size:
+#                 stock = ProductStock.objects.get(
+#                     product=item.product,
+#                     size=item.size
+#                 )
+#                 stock.stock += item.quantity
+#                 stock.save()
+
+#             item.order.status = "returned"
+
+#         # ❌ REFUND → NO STOCK CHANGE
+#         elif item.refund_requested:
+#             item.order.status = "refunded"
+
+#         elif item.exchange_requested:
+#             item.order.status = "exchanged"
+
+#         item.order.save()
+
+#     else:
+#         item.request_status = "rejected"
+#         item.processed_date = timezone.now()
+
+#     item.save()
+#     return redirect('/admin/')
 @staff_member_required
 def process_order_request(request, item_id, approve=True):
     item = get_object_or_404(OrderItem, id=item_id)
+    order = item.order
 
     if approve:
         item.request_status = "approved"
         item.processed_date = timezone.now()
 
-        # ✅ RETURN → STOCK ADD
+        # 🔥 DELIVERY REQUIRED
+        order.delivery_boy = None
+        order.status = "pending"
+
         if item.return_requested:
-            if item.product and item.size:
-                stock = ProductStock.objects.get(
-                    product=item.product,
-                    size=item.size
-                )
-                stock.stock += item.quantity
-                stock.save()
+            order.return_type = "return"
 
-            item.order.status = "returned"
-
-        # ❌ REFUND → NO STOCK CHANGE
         elif item.refund_requested:
-            item.order.status = "refunded"
+            order.return_type = "refund"
 
         elif item.exchange_requested:
-            item.order.status = "exchanged"
+            order.return_type = "exchange"
 
-        item.order.save()
+        order.save()
 
     else:
         item.request_status = "rejected"
         item.processed_date = timezone.now()
 
     item.save()
-    return redirect('/admin/')
-
+    return redirect("/admin/")
 
 from django.http import HttpResponse
 from .models import State, District, Block, Village
@@ -1755,3 +1786,27 @@ def product_invoice(request, item_id):
         "invoice/product_invoice.html",
         context
     )
+
+@login_required
+def verify_delivery_otp(request, order_id):
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        delivery_boy=request.user
+    )
+
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+
+        if entered_otp == order.delivery_otp:
+            order.status = "delivered"
+            order.otp_verified = True
+            order.delivery_otp = None   # 🔐 clear OTP
+            order.save()
+
+            messages.success(request, "Order delivered successfully")
+            return redirect("delivery-dashboard")
+        else:
+            messages.error(request, "Invalid OTP")
+
+    return render(request, "delivery/verify_otp.html", {"order": order})

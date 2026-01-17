@@ -34,6 +34,7 @@ class CustomUser(AbstractUser):
     block = models.ForeignKey('Block', on_delete=models.SET_NULL, null=True, blank=True)
     village = models.ForeignKey('Village', on_delete=models.SET_NULL, null=True, blank=True)
     is_store_owner = models.BooleanField(default=False)
+    is_delivery_boy = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
@@ -271,6 +272,11 @@ class Order(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
         ("packed", "Packed"),
+        ("assigned", "Assigned"),
+        ("accepted", "Accepted"),
+        ("picked_up", "Picked Up"), 
+        ("rejected", "Rejected"),
+        ("out_for_delivery", "Out For Delivery"),
         ("shipped", "Shipped"),
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
@@ -278,6 +284,18 @@ class Order(models.Model):
         ("refunded", "Refunded"),
         ("exchanged", "Exchanged"),
     )
+    RETURN_TYPE_CHOICES = (
+    ("normal", "Normal Delivery"),
+    ("return", "Return Pickup"),
+    ("refund", "Refund Pickup"),
+    ("exchange", "Exchange Pickup"),
+)
+
+    return_type = models.CharField(
+    max_length=20,
+    choices=RETURN_TYPE_CHOICES,
+    default="normal"
+)
 
     PAYMENT_CHOICES = (
         ('upi', 'UPI'),
@@ -294,7 +312,14 @@ class Order(models.Model):
         editable=False,
         db_index=True
     )
-
+    
+    delivery_boy = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name="delivery_orders"
+)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -330,6 +355,12 @@ class Order(models.Model):
 
     def __str__(self):
         return self.order_uid
+    delivery_otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_verified = models.BooleanField(default=False)
+
+    def generate_otp(self):
+        self.delivery_otp = str(random.randint(100000, 999999))
+        self.save()
     
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
@@ -517,3 +548,4 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.otp}"
+

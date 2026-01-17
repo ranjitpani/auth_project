@@ -10,7 +10,7 @@ from .views import (
     place_order, live_search, checkout_address, checkout_payment,
     checkout_summary, save_address, change_address, edit_address,
     cancel_order, order_detail, request_order_action, ajax_load_villages,
-    download_invoice, product_invoice,
+    download_invoice, product_invoice
  # <-- added store owner views
 )
 from accounts.views import create_superuser
@@ -75,6 +75,6 @@ urlpatterns = [
 
     # Admin
     path('create-superuser/', create_superuser),
-
+    
 
 ]

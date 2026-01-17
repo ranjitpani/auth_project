@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Delivery Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --info:#0ea5e9;
+  --warning:#f59e0b;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  padding-bottom:90px; /* space for sticky bar */
+}
+
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:16px;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#fff;
+  padding:22px;
+  border-radius:18px;
+  margin-bottom:22px;
+  animation:slideDown .5s ease;
+}
+.header h2{font-size:22px;margin-bottom:6px}
+
+/* ===== ORDER CARD ===== */
+.order-card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:18px;
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
+  animation:fadeUp .4s ease;
+}
+
+.order-card p{margin-bottom:6px;font-size:14px}
+
+.badge{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+}
+.badge.blue{background:#e0e7ff;color:#3730a3}
+.badge.green{background:#dcfce7;color:#166534}
+
+/* ===== BUTTONS ===== */
+.btn-row{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  margin-top:10px;
+  padding-bottom:4px;
+}
+.btn-row::-webkit-scrollbar{display:none}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:10px 14px;
+  font-size:13px;
+  border-radius:14px;
+  text-decoration:none;
+  color:#fff;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:.2s;
+}
+.btn:active{transform:scale(.96)}
+
+.btn-success{background:var(--success)}
+.btn-danger{background:var(--danger)}
+.btn-primary{background:var(--primary)}
+.btn-info{background:var(--info)}
+.btn-warning{background:var(--warning);color:#000}
+.btn-secondary{background:#6b7280}
+
+/* ===== PRIMARY GLOW ===== */
+.glow{
+  box-shadow:0 0 0 rgba(79,70,229,.7);
+  animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(79,70,229,.6)}
+  70%{box-shadow:0 0 0 14px rgba(79,70,229,0)}
+  100%{box-shadow:0 0 0 0 rgba(79,70,229,0)}
+}
+
+/* ===== STICKY BOTTOM BAR ===== */
+/* ===== STICKY NAVBAR FIX ===== */
+.sticky-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  height:70px;
+  background:#ffffff;
+  border-top:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  z-index:999;
+}
+
+/* NAV ITEM */
+.nav-item{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  color:#374151;
+  font-size:12px;
+  gap:4px;
+}
+
+/* ICON */
+.nav-item .icon{
+  font-size:20px;
+  line-height:1;
+}
+
+/* TEXT */
+.nav-item .text{
+  font-size:11px;
+}
+
+/* ACTIVE / HOVER */
+.nav-item:hover{
+  color:var(--primary);
+}
+
+/* LOGOUT COLOR */
+.nav-item.danger{
+  color:#dc2626;
+}
+
+/* SAFE AREA FOR iPHONE */
+body{
+  padding-bottom:90px;
+}
+
+.sticky-bar a{
+  flex:1;
+  margin:0 6px;
+  text-align:center;
+  padding:12px;
+  border-radius:14px;
+  font-size:14px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>🚚 Delivery Dashboard</h2>
+    <p>Welcome <b>{{ request.user.first_name }}</b></p>
+  </div>
+
+  <!-- ORDERS -->
+  {% for order in orders %}
+  <div class="order-card">
+
+    <p><b>Order ID:</b> {{ order.order_uid }}</p>
+
+    <p><b>Type:</b>
+      {% if order.return_type == "normal" %} 🛵 Normal Delivery
+      {% elif order.return_type == "return" %} 🔁 Return Pickup
+      {% elif order.return_type == "refund" %} 💰 Refund Pickup
+      {% elif order.return_type == "exchange" %} 🔄 Exchange Pickup
+      {% endif %}
+    </p>
+
+    <p><b>Status:</b> <span class="badge blue">{{ order.status }}</span></p>
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+
+      {% if order.status == "assigned" %}
+        <a href="{% url 'delivery-accept' order.id %}" class="btn btn-success glow vibrate">✅ Accept</a>
+        <a href="{% url 'delivery-reject' order.id %}" class="btn btn-danger vibrate">❌ Reject</a>
+      {% endif %}
+
+      {% if order.status == "accepted" or order.status == "picked_up" or order.status == "out_for_delivery" %}
+        {% if order.return_type == "normal" %}
+          <a href="{% url 'delivery-store-route' order.id %}" class="btn btn-primary vibrate">🏬 Store</a>
+        {% else %}
+          <a href="{% url 'delivery-user-route' order.id %}" class="btn btn-primary vibrate">🏠 Pickup</a>
+        {% endif %}
+      {% endif %}
+
+      {% if order.status == "accepted" %}
+        <a href="{% url 'delivery-pickup' order.id %}" class="btn btn-success glow vibrate">📦 Picked Up</a>
+      {% endif %}
+
+      {% if order.status == "picked_up" or order.status == "out_for_delivery" %}
+        {% if order.return_type == "normal" %}
+          <a href="{% url 'delivery-user-route' order.id %}" class="btn btn-info vibrate">📍 User</a>
+        {% else %}
+          <a href="{% url 'delivery-store-route' order.id %}" class="btn btn-info vibrate">🏬 Return</a>
+        {% endif %}
+      {% endif %}
+
+      {% if order.status == "out_for_delivery" %}
+        <a href="{% url 'delivery-verify-otp' order.id %}" class="btn btn-warning glow vibrate">🔐 OTP</a>
+      {% endif %}
+
+      {% if order.status == "delivered" %}
+        <span class="badge green">✅ Completed</span>
+      {% endif %}
+
+    </div>
+  </div>
+  {% empty %}
+    <div class="order-card">No orders assigned</div>
+  {% endfor %}
+
+</div>
+
+<!-- ===== STICKY BOTTOM BAR ===== -->
+<!-- ===== STICKY BOTTOM NAVBAR ===== -->
+<div class="sticky-bar">
+  
+  <a href="{% url 'delivery-dashboard' %}" class="nav-item vibrate">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+  </a>
+
+  <a href="{% url 'delivery-history' %}" class="nav-item vibrate">
+    <span class="icon">📜</span>
+    <span class="text">History</span>
+  </a>
+
+  <a href="{% url 'delivery-calendar' %}" class="nav-item vibrate">
+    <span class="icon">📅</span>
+    <span class="text">Calendar</span>
+  </a>
+
+  <a href="{% url 'delivery-logout' %}" class="nav-item vibrate danger">
+    <span class="icon">🚪</span>
+    <span class="text">Logout</span>
+  </a>
+
+</div>
+
+<!-- ===== HAPTIC VIBRATION ===== -->
+<script>
+// vibration on click
+// document.querySelectorAll(".vibrate").forEach(btn=>{
+//   btn.addEventListener("click",()=>{
+//     if(navigator.vibrate){
+//       navigator.vibrate(40);
+//     }
+//   });
+// });
+
+
+// ===== Vibration + Click =====
+document.querySelectorAll(".vibrate").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(navigator.vibrate) navigator.vibrate(40);
+  });
+});
+
+// ===== Notification Sound for new assigned orders =====
+const notifSound = new Audio("{% static 'sounds/order.mp3' %}");
+let notifiedOrders = new Set();
+
+// Function to check for new assigned orders via AJAX
+function checkNewOrders(){
+    fetch("{% url 'delivery-dashboard-orders-json' %}")
+    .then(res=>res.json())
+    .then(data=>{
+        data.orders.forEach(order=>{
+            if(order.status === "assigned" && !notifiedOrders.has(order.id)){
+                // Play sound
+                notifSound.play().catch(err=>console.log("Sound blocked:", err));
+                // Vibrate
+                if(navigator.vibrate) navigator.vibrate([100,50,100]);
+                // Mark notified
+                notifiedOrders.add(order.id);
+            }
+        });
+    });
+}
+
+// Check every 5 seconds
+setInterval(checkNewOrders, 5000);
+
+</script>
+
+</body>
+</html>

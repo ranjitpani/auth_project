@@ -166,6 +166,8 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         "order_uid",
         "user",
+        "delivery_boy", 
+        "return_type",
         "total_amount",
         "payment_method",
         "status",
@@ -173,12 +175,16 @@ class OrderAdmin(admin.ModelAdmin):
         "view_location",
         "created_at",
     )
-    list_filter = ("status", "payment_method")
-    list_editable = ("status", "expected_delivery")
-    search_fields = ("order_uid", "user__email")
+    list_filter = ("status", "payment_method","delivery_boy","return_type",)
+    list_editable = ("status", "expected_delivery","delivery_boy","return_type",)
+    search_fields = ("order_uid", "user__email","delivery_boy__email")
     inlines = [OrderItemInline]
     date_hierarchy = "created_at"
     readonly_fields = ("order_uid",)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "delivery_boy":
+            kwargs["queryset"] = CustomUser.objects.filter(is_delivery_boy=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     def view_location(self, obj):
         if obj.latitude and obj.longitude:
             return format_html(
@@ -190,7 +196,17 @@ class OrderAdmin(admin.ModelAdmin):
         return "—"
 
     view_location.short_description = "Customer Location"
-    
+
+    def save_model(self, request, obj, form, change):
+    # 🔁 RETURN / REFUND / EXCHANGE DELIVERY
+        if obj.delivery_boy and obj.status in ["pending", "delivered"]:
+            obj.status = "assigned"
+
+        # OTP only for normal delivery
+            if obj.return_type == "normal":
+                obj.generate_otp()
+
+        super().save_model(request, obj, form, change)
     
 @admin.register(OrderItem)
 class OrderItemRequestAdmin(admin.ModelAdmin):
@@ -235,7 +251,3 @@ class ExchangeRequestAdmin(OrderItemRequestBaseAdmin):
         qs = super().get_queryset(request)
         return qs.filter(exchange_requested=True)
     
-# class StoreAdmin(admin.ModelAdmin):
-#     list_display = ['name', 'owner', 'category', 'is_active', 'gst_number']
-#     list_editable = ['owner', 'is_active', 'gst_number'] 
-

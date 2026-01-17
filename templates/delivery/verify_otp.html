@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Delivery OTP</title>
+<style>
+:root{
+  --primary:#4f46e5;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{
+  max-width:400px;
+  margin:60px auto 20px auto;
+  padding:16px;
+}
+/* ===== HEADER ===== */
+h2{
+  font-size:20px;
+  margin-bottom:10px;
+  text-align:center;
+  color:var(--primary);
+}
+p{
+  text-align:center;
+  margin-bottom:20px;
+  font-size:14px;
+  color:#555;
+}
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 12px 25px rgba(0,0,0,.1);
+  animation:fadeUp .4s ease;
+}
+/* ===== INPUT ===== */
+input[type="text"]{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  font-size:16px;
+  margin-bottom:16px;
+  outline:none;
+  transition:0.2s;
+}
+input[type="text"]:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(79,70,229,0.2);
+}
+/* ===== BUTTON ===== */
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+  background:var(--primary);
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover{
+  background:#6366f1;
+  transform:translateY(-2px);
+}
+/* ===== ANIMATION ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+/* ===== MOBILE ===== */
+@media(max-width:480px){
+  .container{
+    margin:40px 12px 20px 12px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>🔐 Verify Delivery OTP</h2>
+  <p>Order: <b>{{ order.order_uid }}</b></p>
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <input type="text" name="otp" placeholder="Enter OTP" required>
+      <button type="submit">Verify OTP</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

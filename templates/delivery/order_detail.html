@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Order Details</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --success:#16a34a;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:16px;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#fff;
+  padding:20px;
+  border-radius:18px;
+  margin-bottom:20px;
+  animation:slideDown .5s ease;
+}
+.header h2{font-size:22px;margin-bottom:6px}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.1);
+  animation:fadeUp .4s ease;
+}
+
+/* ===== INFO ===== */
+.info p{
+  margin-bottom:6px;
+  font-size:14px;
+}
+.badge{
+  display:inline-block;
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:12px;
+  background:#dcfce7;
+  color:#166534;
+}
+
+/* ===== ITEM CARD ===== */
+.item{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.item p{
+  font-size:13px;
+  margin-bottom:4px;
+}
+.price{
+  font-weight:600;
+  color:var(--primary);
+}
+
+/* ===== BACK BUTTON ===== */
+.btn{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px;
+  border-radius:16px;
+  background:var(--primary);
+  color:#fff;
+  text-decoration:none;
+  font-size:15px;
+  margin-top:12px;
+  transition:.2s;
+}
+.btn:hover{opacity:.9}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>📦 Order Details</h2>
+    <p>Order ID: <b>{{ order.order_uid }}</b></p>
+  </div>
+
+  <!-- ORDER STATUS -->
+  <div class="card info">
+    <p><b>Status:</b>
+      <span class="badge">{{ order.get_status_display }}</span>
+    </p>
+  </div>
+
+  <!-- DELIVERY SNAPSHOT -->
+  <div class="card info">
+    <h3 style="margin-bottom:10px;">🚚 Delivery Details</h3>
+    <p><b>Name:</b> {{ order.delivery_name }}</p>
+    <p><b>Phone:</b> {{ order.delivery_phone }}</p>
+    <p><b>Address:</b> {{ order.delivery_address }}</p>
+
+    {% if order.delivery_city %}
+      <p><b>City:</b> {{ order.delivery_city }}</p>
+    {% endif %}
+    {% if order.delivery_postal_code %}
+      <p><b>Pincode:</b> {{ order.delivery_postal_code }}</p>
+    {% endif %}
+  </div>
+
+  <!-- ITEMS -->
+  <div class="card">
+    <h3 style="margin-bottom:12px;">🛒 Ordered Items</h3>
+
+    {% for item in order.items.all %}
+      <div class="item">
+        <p><b>Product:</b> {{ item.product_name }}</p>
+        <p><b>Store:</b> {{ item.store_name }}</p>
+        <p><b>Category:</b> {{ item.category_name }}</p>
+        <p><b>Size:</b> {{ item.size }}</p>
+        <p><b>Qty:</b> {{ item.quantity }}</p>
+        <p class="price">₹ {{ item.price }}</p>
+      </div>
+    {% empty %}
+      <p>No items found</p>
+    {% endfor %}
+  </div>
+
+  <!-- BACK -->
+  <a href="{% url 'delivery-dashboard' %}" class="btn">
+    ⬅ Back to Dashboard
+  </a>
+
+</div>
+</body>
+</html>

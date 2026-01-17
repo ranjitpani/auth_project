@@ -1,0 +1,151 @@
+
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --info:#0ea5e9;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+*{box-sizing:border-box}
+body{background:var(--bg)}
+
+.wrapper{
+  max-width:720px;
+  margin:auto;
+  padding:12px;
+}
+
+/* ===== TOP CARD ===== */
+.top-card{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#fff;
+  padding:16px;
+  border-radius:18px;
+  margin-bottom:12px;
+}
+.top-card h2{
+  font-size:18px;
+  margin-bottom:6px;
+}
+.top-card p{
+  font-size:13px;
+  margin:2px 0;
+  opacity:.95;
+}
+
+/* ===== MAP ===== */
+#map{
+  height:55vh;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+
+/* ===== BOTTOM BAR ===== */
+.bottom-bar{
+  position:sticky;
+  bottom:0;
+  background:#fff;
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 25px rgba(0,0,0,.12);
+  display:flex;
+  gap:10px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:500;
+  color:#fff;
+}
+.btn-primary{background:var(--primary)}
+.btn-info{background:var(--info)}
+</style>
+
+<div class="wrapper">
+
+  <!-- TOP INFO -->
+  <div class="top-card">
+    <h2>🚚 Deliver to User</h2>
+    <p><b>👤 Name:</b> {{ order.delivery_name }}</p>
+    <p><b>📞 Phone:</b> {{ order.delivery_phone }}</p>
+    <p><b>📍 Address:</b> {{ order.delivery_address }}</p>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- BOTTOM ACTION -->
+  <div class="bottom-bar">
+    <a href="https://www.google.com/maps/dir/?api=1&destination={{ user_lat }},{{ user_lng }}"
+       target="_blank"
+       class="btn btn-primary">
+       🗺 Open in Google Maps
+    </a>
+    <a href="javascript:history.back()" class="btn btn-info">
+      ⬅ Back
+    </a>
+  </div>
+
+</div>
+
+<!-- LEAFLET -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const userLat = {{ user_lat }};
+const userLng = {{ user_lng }};
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    function(position){
+      const dLat = position.coords.latitude;
+      const dLng = position.coords.longitude;
+
+      const map = L.map('map').setView([dLat, dLng], 13);
+
+      // Tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      // Markers
+      L.marker([dLat, dLng])
+        .addTo(map)
+        .bindPopup("🚴 You")
+        .openPopup();
+
+      L.marker([userLat, userLng])
+        .addTo(map)
+        .bindPopup("📍 Customer");
+
+      // Route (OSRM)
+      fetch(`https://router.project-osrm.org/route/v1/driving/${dLng},${dLat};${userLng},${userLat}?overview=full&geometries=geojson`)
+        .then(res => res.json())
+        .then(data => {
+          const route = data.routes[0].geometry;
+          const routeLine = L.geoJSON(route, {
+            style:{
+              color:'#4f46e5',
+              weight:4
+            }
+          }).addTo(map);
+
+          map.fitBounds(routeLine.getBounds());
+        });
+    },
+    function(){
+      alert("Please allow location access");
+    }
+  );
+}
+</script>
+

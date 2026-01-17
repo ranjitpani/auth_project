@@ -1,0 +1,135 @@
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+.route-wrapper{
+  max-width:720px;
+  margin:auto;
+  padding:12px;
+}
+.top-card{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#fff;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:12px;
+}
+.top-card h3{
+  font-size:18px;
+  margin-bottom:4px;
+}
+.top-card p{
+  font-size:13px;
+  opacity:.9;
+}
+
+/* ===== MAP ===== */
+#map{
+  height:55vh;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(0,0,0,.1);
+}
+
+/* ===== BOTTOM ACTION ===== */
+.bottom-bar{
+  position:sticky;
+  bottom:0;
+  background:#fff;
+  padding:12px;
+  border-radius:18px 18px 0 0;
+  margin-top:12px;
+  box-shadow:0 -8px 20px rgba(0,0,0,.1);
+  display:flex;
+  gap:10px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:500;
+  color:#fff;
+}
+.btn-primary{background:var(--primary)}
+.btn-secondary{background:#6b7280}
+</style>
+
+<div class="route-wrapper">
+
+  <!-- TOP INFO -->
+  <div class="top-card">
+    <h3>🧭 Route to Store</h3>
+    <p>Live location → Store navigation</p>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- ACTIONS -->
+  <div class="bottom-bar">
+    <a href="https://www.google.com/maps/dir/?api=1&destination={{ store_lat }},{{ store_lng }}"
+       target="_blank"
+       class="btn btn-primary">
+       🗺 Open in Google Maps
+    </a>
+    <a href="javascript:history.back()" class="btn btn-secondary">
+      ⬅ Back
+    </a>
+  </div>
+
+</div>
+
+<!-- LEAFLET -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+const storeLat = {{ store_lat }};
+const storeLng = {{ store_lng }};
+
+// Init map
+const map = L.map("map").setView([storeLat, storeLng], 13);
+
+// Tiles
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap"
+}).addTo(map);
+
+// Store marker
+L.marker([storeLat, storeLng])
+ .addTo(map)
+ .bindPopup("🏪 Store Location")
+ .openPopup();
+
+// Delivery boy live location
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const dLat = pos.coords.latitude;
+      const dLng = pos.coords.longitude;
+
+      L.marker([dLat, dLng])
+       .addTo(map)
+       .bindPopup("🚴 You are here");
+
+      const routeLine = L.polyline(
+        [[dLat, dLng],[storeLat, storeLng]],
+        { color:"#4f46e5", weight:4 }
+      ).addTo(map);
+
+      map.fitBounds(routeLine.getBounds());
+    },
+    function(){
+      alert("Location permission denied");
+    }
+  );
+}
+</script>
+
