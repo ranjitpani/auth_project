@@ -569,11 +569,13 @@
         {% for offer in offers %}
         <div class="offer-card">
             <a href="{% url 'offer_detail' offer.id %}">
-                {% if offer.image %}
-                <img src="{{ offer.image.url }}">
-                {% else %}
-                <img src="{% static 'default_product.jpg' %}">
-                {% endif %}
+                {% if product.image %}
+            <img src="{{ product.image.url }}">
+        {% elif product.images.first %}
+            <img src="{{ product.images.first.image.url }}">
+        {% else %}
+            <img src="{% static 'default_product.jpg' %}">
+        {% endif %}
                 <div class="offer-overlay">
                     <h3>{{ offer.discount_percentage }}% OFF</h3>
                     <p>{{ offer.description }}</p>
@@ -671,7 +673,7 @@
     ">
         <span id="latest-heart-{{ product.id }}" 
               style="font-size:18px;
-              color:red">
+              color: color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};">
             ♥
         </span>
     </div>
@@ -773,7 +775,7 @@
      ">
 
             <span id="heart-{{ product.id }}" style="font-size:18px;
-      color:red">
+      color: color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};"">
                 ♥
             </span>
 
