@@ -10,7 +10,7 @@ from .views import (
     place_order, live_search, checkout_address, checkout_payment,
     checkout_summary, save_address, change_address, edit_address,
     cancel_order, order_detail, request_order_action, ajax_load_villages,
-    download_invoice, product_invoice
+    download_invoice, product_invoice,wishlist,add_to_wishlist,remove_from_wishlist,product_category_page,search_products,ajax_search,offer_detail,latest_products_page
  # <-- added store owner views
 )
 from accounts.views import create_superuser
@@ -28,12 +28,13 @@ urlpatterns = [
     path('cart-history/', cart_history, name='cart_history'),
     path('location/', location, name='location'),
     path('profile/', profile, name='profile'),
+    path("category/<int:category_id>/", product_category_page, name="product_category_page"),
 
     # AJAX endpoints for dynamic location dropdown
     path('ajax/load-states/', load_states, name='ajax_load_states'),
     path('ajax/load-districts/', load_districts, name='ajax_load_districts'),
     path('ajax/load-blocks/', load_blocks, name='ajax_load_blocks'),
-
+     
     # Store detail
     path('store/<int:id>/', store_detail, name='store_detail'),
 
@@ -60,7 +61,8 @@ urlpatterns = [
     path('checkout/save-address/', save_address, name='save_address'),
     path('checkout/change-address/', change_address, name='change_address'),
     path('checkout/edit-address/<int:address_id>/', edit_address, name='edit_address'),
-
+    path("search/",search_products, name="search_products"),
+    path("ajax-search/", ajax_search, name="ajax_search"),
     # Order actions
     path('order/<int:order_id>/cancel/', cancel_order, name='cancel_order'),
     path('order/<int:order_id>/', order_detail, name='order_detail'),
@@ -75,6 +77,11 @@ urlpatterns = [
 
     # Admin
     path('create-superuser/', create_superuser),
-    
+    path('add-to-wishlist/<int:product_id>/', add_to_wishlist, name='add_to_wishlist'),
+path('wishlist/', wishlist, name='wishlist'),
+path('remove-from-wishlist/<int:item_id>/', remove_from_wishlist, name='remove_from_wishlist'),
+
+path('offer/<int:offer_id>/', offer_detail, name='offer_detail'),
+path('latest-products/', latest_products_page, name='latest_products_page'),
 
 ]

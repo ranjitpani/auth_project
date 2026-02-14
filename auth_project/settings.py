@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'nested_admin',
     'delivery',
+    'smart_selects',
+
     
     
 ]

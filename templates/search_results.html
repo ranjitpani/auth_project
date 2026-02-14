@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% load static %}
+{% block global_search %}{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* ================= TOP SEARCH SECTION ================= */
+
+
+/* ================= SEARCH WRAPPER ================= */
+
+.search-wrapper{
+    padding:20px;
+    background:#fff;
+    box-shadow:0 4px 15px rgba(0,0,0,.05);
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+/* 🔍 Row 1 → Search + Button */
+.search-top{
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.search-top input{
+    flex:1;
+    padding:12px 18px;
+    border-radius:40px;
+    border:1px solid #ddd;
+    font-size:14px;
+    background:#f9fafc;
+    transition:.3s;
+}
+
+.search-top input:focus{
+    outline:none;
+    border-color:#007bff;
+    box-shadow:0 0 12px rgba(0,123,255,.25);
+    background:#fff;
+}
+
+.search-top button{
+    padding:12px 22px;
+    border:none;
+    border-radius:40px;
+    background:linear-gradient(45deg,#007bff,#00c6ff);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s;
+    white-space:nowrap;
+}
+
+.search-top button:hover{
+    transform:scale(1.05);
+    box-shadow:0 6px 18px rgba(0,123,255,.4);
+}
+
+/* 📂 Row 2 → Category + Sort */
+.search-filters{
+    display:flex;
+    gap:10px;
+}
+
+.search-filters select{
+    flex:1;
+    padding:10px 15px;
+    border-radius:30px;
+    border:1px solid #ddd;
+    font-size:13px;
+    background:#fff;
+    cursor:pointer;
+}
+
+/* MOBILE → SAME LAYOUT (no stacking) */
+@media(max-width:768px){
+
+    .search-top{
+        flex-direction:row;
+    }
+
+    .search-filters{
+        flex-direction:row;
+    }
+
+}
+
+
+
+/* ================= PRODUCT GRID ================= */
+
+.product-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);  /* ALWAYS 2 */
+    gap:18px;
+    padding:20px;
+}
+
+/* ================= PRODUCT CARD ================= */
+
+.product-card{
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    transition:.4s ease;
+    position:relative;
+}
+
+.product-card:hover{
+    transform:translateY(-8px) scale(1.02);
+    box-shadow:0 18px 40px rgba(0,0,0,.15);
+}
+
+/* Image */
+.product-card img{
+    width:100%;
+    height:190px;
+    object-fit:cover;
+    transition:.4s ease;
+}
+
+.product-card:hover img{
+    transform:scale(1.1);
+}
+
+/* Content */
+.product-card a{
+    display:block;
+    padding:15px;
+    text-decoration:none;
+    color:#333;
+}
+
+.product-card h4{
+    font-size:15px;
+    margin-bottom:6px;
+    font-weight:600;
+}
+
+.product-card b{
+    color:#007bff;
+    font-size:15px;
+}
+
+.product-card span{
+    font-size:13px;
+    color:#888;
+}
+
+/* ================= MOBILE RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+    .search-bar-row{
+        flex-direction:column;
+    }
+
+    .search-bar-row input,
+    .search-bar-row select,
+    .search-bar-row button{
+        width:100%;
+    }
+
+    .product-card img{
+        height:150px;
+    }
+
+}
+
+/* ================= PAGINATION ================= */
+
+.pagination{
+    text-align:center;
+    padding:30px;
+}
+
+.pagination a{
+    padding:8px 14px;
+    margin:0 5px;
+    background:#f1f1f1;
+    border-radius:8px;
+    text-decoration:none;
+    transition:.3s;
+}
+
+.pagination a:hover{
+    background:#007bff;
+    color:white;
+}
+
+.pagination .active{
+    background:#007bff;
+    color:white;
+    padding:8px 14px;
+    border-radius:8px;
+}
+
+</style>
+
+
+
+<!-- 🔍 TOP SEARCH FILTER BAR -->
+<form method="get" class="search-wrapper">
+
+    <!-- 🔍 Row 1 -->
+    <div class="search-top">
+        <input type="text"
+               name="product_q"
+               id="liveSearch"
+               placeholder="Search products..."
+               value="{{ query }}">
+
+        <button type="submit">Search</button>
+    </div>
+
+    <!-- 📂 Row 2 -->
+    <div class="search-filters">
+
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}"
+            {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                {{ cat.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="sort">
+            <option value="">Sort By</option>
+            <option value="low"
+            {% if request.GET.sort == "low" %}selected{% endif %}>
+                Price: Low to High
+            </option>
+            <option value="high"
+            {% if request.GET.sort == "high" %}selected{% endif %}>
+                Price: High to Low
+            </option>
+        </select>
+
+    </div>
+
+</form>
+
+
+
+
+<!-- 🔥 Live Suggestions -->
+<div id="suggestions" style="padding-left:20px;"></div>
+
+{% if products %}
+<div class="product-grid">
+{% for product in products %}
+<div class="product-card" style="position:relative;">
+
+<!-- ❤️ Wishlist Button -->
+<div onclick="toggleWishlist(event, {{ product.id }})"
+     style="
+     position:absolute;
+     top:8px;
+     right:8px;
+     background:white;
+     width:32px;
+     height:32px;
+     border-radius:50%;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     box-shadow:0 4px 10px rgba(0,0,0,.2);
+     cursor:pointer;
+     z-index:10;
+     ">
+
+<span id="heart-{{ product.id }}"
+      style="font-size:18px;
+      color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};">
+♥
+</span>
+
+</div>
+
+<a href="{% url 'product_detail' product.id %}">
+
+    {% if product.image %}
+        <img src="{{ product.image.url }}">
+    {% elif product.images.first %}
+        <img src="{{ product.images.first.image.url }}">
+    {% else %}
+        <img src="{% static 'default_product.jpg' %}">
+    {% endif %}
+
+    <h4>{{ product.name }}</h4>
+
+    {% if product.discounted_price %}
+        <span style="text-decoration:line-through;">₹{{ product.price }}</span>
+        <b>₹{{ product.discounted_price }}</b>
+    {% else %}
+        <b>₹{{ product.price }}</b>
+    {% endif %}
+
+</a>
+</div>
+
+{% endfor %}
+</div>
+{% else %}
+<p style="text-align:center;">No products found.</p>
+{% endif %}
+
+<!-- 📄 Pagination -->
+<div class="pagination">
+{% if page_obj.has_previous %}
+<a href="?page={{ page_obj.previous_page_number }}&product_q={{ query }}">Previous</a>
+{% endif %}
+
+<span class="active">
+Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+</span>
+
+{% if page_obj.has_next %}
+<a href="?page={{ page_obj.next_page_number }}&product_q={{ query }}">Next</a>
+{% endif %}
+</div>
+
+<!-- 🔥 AJAX LIVE SEARCH SCRIPT -->
+<script>
+document.getElementById("liveSearch").addEventListener("keyup", function(){
+    let query = this.value;
+
+    if(query.length > 1){
+        fetch(`/ajax-search/?term=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            let suggestions = document.getElementById("suggestions");
+            suggestions.innerHTML = "";
+
+            data.forEach(item=>{
+                suggestions.innerHTML +=
+                `<div style="padding:5px 0;">
+                    <a href="/product/${item.id}/">
+                        ${item.name} - ₹${item.price}
+                    </a>
+                </div>`;
+            });
+        });
+    } else {
+        document.getElementById("suggestions").innerHTML = "";
+    }
+});
+
+function toggleWishlist(event, productId){
+    event.preventDefault();
+    event.stopPropagation();
+
+    fetch(`/add-to-wishlist/${productId}/`)
+    .then(response => response.json())
+    .then(data => {
+        const heart = document.getElementById(`heart-${productId}`);
+
+        if(data.status === "added"){
+            heart.style.color = "red";
+        }else{
+            heart.style.color = "black";
+        }
+    });
+}
+
+</script>
+
+{% endblock %}

@@ -43,6 +43,71 @@
         .nav-item:hover {
             color: #0d6efd;
         }
+     /* ===== GLOBAL SEARCH BAR PREMIUM DESIGN ===== */
+
+.global-search-bar{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 12px 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.85);
+    z-index: 9999;
+    transition: all .3s ease;
+}
+
+.search-container{
+    max-width: 600px;
+    margin: auto;
+    position: relative;
+}
+
+.search-container input{
+    width: 100%;
+    padding: 12px 45px 12px 18px;
+    border-radius: 50px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    transition: all .3s ease;
+}
+
+/* Focus Animation */
+.search-container input:focus{
+    border-color: #0d6efd;
+    box-shadow: 0 6px 20px rgba(13,110,253,.3);
+    transform: scale(1.03);
+}
+
+/* Search Icon */
+.search-container i{
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+/* Scroll Shrink Effect */
+.global-search-bar.shrink{
+    padding: 6px 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px){
+    .search-container input{
+        font-size: 13px;
+        padding: 10px 40px 10px 15px;
+    }
+}
+
+
         @media (min-width: 768px) {
             .bottom-nav {
                 width: 400px;
@@ -54,6 +119,21 @@
     </style>
 </head>
 <body>
+    
+
+<!-- GLOBAL STICKY SEARCH BAR -->
+{% block global_search %}
+<div class="global-search-bar" id="globalSearchBar">
+    <div class="search-container">
+        <form method="get" action="{% url 'search_products' %}">
+            <input type="text" name="product_q" placeholder="Search products...">
+            <i class="fa fa-search"></i>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
 
 {% block content %}{% endblock %}
 
@@ -75,9 +155,14 @@
         History
     </a>
 
-    <a href="/location/" class="nav-item {% if 'location' in request.path %}active{% endif %}">
+    <!-- <a href="/location/" class="nav-item {% if 'location' in request.path %}active{% endif %}">
         <i class="fa fa-location-dot"></i>
         Location
+    </a> -->
+    <!-- ✅ Wishlist Button -->
+    <a href="/wishlist/" class="nav-item {% if 'wishlist' in request.path %}active{% endif %}">
+        <i class="fa fa-heart"></i>
+        Wishlist
     </a>
 
     {% if request.user.is_authenticated %}
@@ -100,5 +185,18 @@
     </div>
   {% endfor %}
 {% endif %}
+
+<script>
+window.addEventListener("scroll", function(){
+    const searchBar = document.getElementById("globalSearchBar");
+
+    if(window.scrollY > 50){
+        searchBar.classList.add("shrink");
+    } else {
+        searchBar.classList.remove("shrink");
+    }
+});
+</script>
+
 </body>
 </html>

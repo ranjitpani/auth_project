@@ -167,6 +167,44 @@ function reverseGeocode(lat, lng) {
     });
 }
 
+const pincode = document.getElementById("pincode");
+const state = document.getElementById("state");
+const district = document.getElementById("district");
+const block = document.getElementById("block");
+const village = document.getElementById("village");
+
+pincode.addEventListener("blur", ()=>{
+    const pin = pincode.value.trim();
+    if(!pin) return;
+
+    // Use Nominatim API to get details from pincode
+    fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pin}&country=India&format=json&addressdetails=1&limit=1`, {
+        headers: {"Accept": "application/json","User-Agent":"delivery-app/1.0"}
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(!data.length) return;
+
+        const addr = data[0].address;
+
+        state.value    = addr.state || "";
+        district.value = addr.state_district || addr.district || "";
+        block.value    = addr.county || addr.suburb || "";
+        village.value  = addr.village || addr.town || addr.city || "";
+
+        // Set marker on map
+        if(map && marker){
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            map.setView([lat,lng],16);
+            marker.setLatLng([lat,lng]);
+            setLatLng(lat,lng);
+        }
+    })
+    .catch(err=>{
+        console.log("Error fetching pincode data:", err);
+    });
+});
 </script>
 </body>
 </html>

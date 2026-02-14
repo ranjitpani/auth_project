@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Wishlist{% endblock %}
+
+{% block content %}
+<div style="margin-top:70px;"></div>
+<div style="padding:15px;">
+    <h2>❤️ My Wishlist</h2>
+
+    {% if wishlist_items %}
+        {% for item in wishlist_items %}
+            <div style="background:#fff;padding:10px;margin-bottom:10px;border-radius:8px;display:flex;align-items:center;gap:15px;">
+
+                <!-- Product Image -->
+                <a href="{% url 'product_detail' item.product.id %}">
+                    <img src="{{ item.product.image.url }}"
+                         style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
+                </a>
+
+                <div style="flex:1;">
+                    <!-- Clickable Name -->
+                    <a href="{% url 'product_detail' item.product.id %}"
+                       style="text-decoration:none;color:black;">
+                        <h4>{{ item.product.name }}</h4>
+                    </a>
+
+                    <p>₹{{ item.product.price }}</p>
+                </div>
+
+                <!-- Remove Button -->
+                <a href="{% url 'remove_from_wishlist' item.id %}"
+                   style="background:red;color:white;padding:6px 10px;border-radius:5px;text-decoration:none;">
+                    Remove
+                </a>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No items in wishlist</p>
+    {% endif %}
+</div>
+{% endblock %}

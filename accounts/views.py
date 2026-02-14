@@ -314,6 +314,10 @@ from django.shortcuts import render
 from django.db.models import Q
 from collections import defaultdict
 import random
+from .models import Wishlist,Offer
+from .models import Category
+from django.shortcuts import render, redirect
+import datetime
 
 def home(request):
     user = request.user
@@ -325,7 +329,7 @@ def home(request):
 
     # ================= STORES (BASE QUERY) =================
     stores = Store.objects.filter(is_active=True)
-
+    offers = Offer.objects.filter(is_active=True, start_date__lte=datetime.date.today(), end_date__gte=datetime.date.today())
     # 🔥 LOCATION PRIORITY — ONLY IF USER IS LOGGED IN
     if user.is_authenticated:
         if getattr(user, "village", None):
@@ -349,6 +353,20 @@ def home(request):
 
     # ================= STORE CATEGORIES (TOP BAR) =================
     store_categories = StoreCategory.objects.all()
+    # ================= STORE CATEGORY FILTER =================
+    if selected_category and selected_category.isdigit():
+        selected_category_id = int(selected_category)
+
+        stores = stores.filter(category__id=selected_category_id)
+
+    # 🔥 Filter product categories based on selected store category
+        product_categories = Category.objects.filter(
+            store_category__id=selected_category_id
+    )
+
+    else:
+        product_categories = Category.objects.all()
+
 
     # ================= PRODUCTS =================
     products = Product.objects.filter(
@@ -357,34 +375,129 @@ def home(request):
     )
 
     if product_q:
+        
+    # If no redirect, still filter normally
         products = products.filter(
             Q(name__icontains=product_q) |
             Q(category__name__icontains=product_q)
         )
+
 
     # ================= PRODUCTS BY PRODUCT CATEGORY =================
     products_by_category = defaultdict(list)
 
     for p in products.select_related('category'):
         cat_name = p.category.name if p.category else "Uncategorized"
-        if len(products_by_category[cat_name]) < 6:
+        if len(products_by_category[cat_name]) < 4:
             products_by_category[cat_name].append(p)
 
     # shuffle products inside each category
     for plist in products_by_category.values():
         random.shuffle(plist)
+    wishlist_ids = []
+
+    if request.user.is_authenticated:
+        wishlist_ids = Wishlist.objects.filter(
+            user=request.user
+        ).values_list('product_id', flat=True)
+    latest_products = Product.objects.filter(is_latest=True).order_by('-created_at')[:10]
 
     # ================= CONTEXT =================
     context = {
         'stores': stores,
         'store_categories': store_categories,
+        'product_categories': product_categories,
         'selected_category': selected_category,
         'products_by_category': dict(products_by_category),
         'product_q': product_q,
         'store_q': store_q,
+        "wishlist_ids": list(wishlist_ids),
+        'offers': offers,
+        'latest_products': latest_products,
     }
 
     return render(request, 'home.html', context)
+from django.core.paginator import Paginator
+from django.db.models import Q, Case, When, IntegerField
+from .models import Product, Category, SearchHistory
+
+def search_products(request):
+    query = request.GET.get("product_q")
+    sort = request.GET.get("sort")
+    category_id = request.GET.get("category")
+
+    products = Product.objects.all()
+
+    # 🔍 Search Logic with Exact Match Priority
+    if query:
+        products = products.annotate(
+            exact_match=Case(
+                When(name__iexact=query, then=1),
+                default=0,
+                output_field=IntegerField(),
+            )
+        ).filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query)
+        ).order_by('-exact_match')
+
+        # 🔥 Save Trending Search
+        if request.user.is_authenticated:
+            SearchHistory.objects.create(user=request.user, query=query)
+
+    # 📂 Category Filter
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    # 💰 Price Sorting
+    if sort == "low":
+        products = products.order_by("price")
+    elif sort == "high":
+        products = products.order_by("-price")
+
+    # 📄 Pagination
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    categories = Category.objects.all()
+    wishlist_ids = []
+
+    if request.user.is_authenticated:
+        wishlist_ids = Wishlist.objects.filter(
+            user=request.user
+        ).values_list('product_id', flat=True)
+
+    context = {
+        "products": page_obj,
+        "page_obj": page_obj,
+        "categories": categories,
+        "query": query,
+        "wishlist_ids": wishlist_ids
+    }
+
+    return render(request, "search_results.html", context)
+
+from django.http import JsonResponse
+
+def ajax_search(request):
+    query = request.GET.get("term")
+    products = Product.objects.filter(
+        name__icontains=query
+    )[:5]
+
+    results = []
+    for product in products:
+        results.append({
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+        })
+
+    return JsonResponse(results, safe=False)
+
+
+
 from django.http import HttpResponse
 from .models import State, District, Block
 
@@ -509,6 +622,7 @@ from django.db.models import Q
 from collections import defaultdict
 from django.db.models.functions import Random
 from .models import Product, ProductStock
+from .models import Wishlist   # <-- add this import
 
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
@@ -587,12 +701,25 @@ def product_detail(request, id):
         product.off_percent = int(((product.price - product.discounted_price) / product.price) * 100)
     else:
         product.off_percent = 0
+    
+     # =========================
+    # WISHLIST CHECK
+    # =========================
+    is_wishlisted = False
+    if request.user.is_authenticated:
+        is_wishlisted = Wishlist.objects.filter(
+            user=request.user,
+            product=product
+        ).exists()
 
     context = {
         "product": product,
         "available_stocks": available_stocks,
         "products_by_category": dict(products_by_category),
+        "is_wishlisted": is_wishlisted,
     }
+       
+
 
     return render(request, "product_detail.html", context)
 
@@ -1824,3 +1951,95 @@ def verify_delivery_otp(request, order_id):
             messages.error(request, "Invalid OTP")
 
     return render(request, "delivery/verify_otp.html", {"order": order})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Wishlist
+# from store.models import Product   # ✅ FIXED
+from .models import Wishlist, Product
+
+
+from django.http import JsonResponse
+
+@login_required(login_url='login')
+def add_to_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    wishlist_item = Wishlist.objects.filter(
+        user=request.user,
+        product=product
+    ).first()
+
+    if wishlist_item:
+        wishlist_item.delete()
+        return JsonResponse({'status': 'removed'})
+    else:
+        Wishlist.objects.create(
+            user=request.user,
+            product=product
+        )
+        return JsonResponse({'status': 'added'})
+
+
+@login_required(login_url='login')
+def wishlist(request):
+    items = Wishlist.objects.filter(user=request.user)
+    return render(request, 'wishlist.html', {
+        'wishlist_items': items   # ✅ SAME NAME AS TEMPLATE
+    })
+
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Wishlist
+
+@login_required
+def remove_from_wishlist(request, item_id):
+    item = get_object_or_404(Wishlist, id=item_id, user=request.user)
+    item.delete()
+    return redirect('wishlist')
+from django.shortcuts import render, get_object_or_404
+from .models import Product, Category
+
+def product_category_page(request, category_id):
+
+    category = get_object_or_404(Category, id=category_id)
+
+    sort = request.GET.get("sort")
+
+    # 🔥 Only category based product
+    products = Product.objects.filter(
+        category=category,
+        is_available=True
+    )
+
+    # Sorting
+    if sort == "price_low":
+        products = products.order_by("price")
+    elif sort == "price_high":
+        products = products.order_by("-price")
+    elif sort == "latest":
+        products = products.order_by("-created_at")
+
+    context = {
+        "category": category,
+        "products": products,
+        "all_categories": Category.objects.all(),
+    }
+
+    return render(request, "product_category_page.html", context)
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Offer, Product
+def offer_detail(request, offer_id):
+    offer = get_object_or_404(Offer, id=offer_id)
+    related_products = offer.products.all()  # 🔹 Only attached products
+    context = {
+        'offer': offer,
+        'related_products': related_products,
+    }
+    return render(request, 'offer_detail.html', context)
+
+def latest_products_page(request):
+    products = Product.objects.filter(is_latest=True).order_by('-created_at')
+    return render(request, 'latest_products.html', {'products': products})

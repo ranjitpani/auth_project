@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* ===== HEADER SECTION ===== */
+.top-controls{
+    padding:15px;
+    background:linear-gradient(120deg,#f8f9fa,#eef4ff);
+    border-radius:15px;
+    margin:10px;
+    box-shadow:0 4px 15px rgba(0,0,0,.08);
+}
+
+/* SEARCH */
+.search-box{
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.search-box input{
+    flex:1;
+    padding:10px 14px;
+    border-radius:30px;
+    border:1px solid #ccc;
+    outline:none;
+    transition:.3s;
+}
+
+.search-box input:focus{
+    border-color:#007bff;
+    box-shadow:0 0 8px rgba(0,123,255,.3);
+}
+
+.search-box button{
+    padding:10px 18px;
+    border:none;
+    border-radius:30px;
+    background:#007bff;
+    color:white;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.search-box button:hover{
+    background:#0056b3;
+}
+
+/* FILTER ROW */
+.filter-row{
+    display:flex;
+    gap:10px;
+}
+
+.filter-row select{
+    flex:1;
+    padding:8px 12px;
+    border-radius:25px;
+    border:1px solid #ccc;
+    outline:none;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.filter-row select:hover{
+    border-color:#007bff;
+}
+
+/* ===== PRODUCT GRID ===== */
+.product-grid{
+    display:grid;
+    grid-template-columns: repeat(2,1fr);
+    gap:15px;
+    padding:15px;
+}
+
+.product-card{
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,.08);
+    transition:.4s ease;
+    position:relative;
+}
+
+.product-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 12px 30px rgba(0,0,0,.15);
+}
+
+.product-card img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    transition:.4s;
+}
+
+.product-card:hover img{
+    transform:scale(1.05);
+}
+
+.product-info{
+    padding:12px;
+}
+
+.product-info h4{
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+.price{
+    font-size:13px;
+}
+
+.old-price{
+    text-decoration:line-through;
+    color:#999;
+    margin-right:5px;
+}
+
+.new-price{
+    font-weight:bold;
+    color:#007bff;
+}
+
+/* ❤️ Wishlist */
+.wishlist-btn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:white;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+    cursor:pointer;
+    transition:.3s;
+    z-index:5;
+}
+
+.wishlist-btn:hover{
+    background:#ffe6ea;
+    transform:scale(1.1);
+}
+
+/* MOBILE PERFECT */
+@media(max-width:480px){
+    .product-card img{
+        height:140px;
+    }
+}
+
+</style>
+
+<div style="margin-top:70px;"></div>
+<h2 style="padding:15px;">{{ category.name }} Products</h2>
+
+<!-- ===== TOP SEARCH + FILTER ===== -->
+
+<!-- ===== PRODUCT GRID ===== -->
+<div class="product-grid">
+
+{% for product in products %}
+<div class="product-card">
+
+    <div onclick="toggleWishlist(event, {{ product.id }})"
+         class="wishlist-btn">
+
+        <span id="heart-{{ product.id }}"
+              style="font-size:18px;
+              color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};">
+        ♥
+        </span>
+    </div>
+
+    <a href="{% url 'product_detail' product.id %}" style="text-decoration:none;color:inherit;">
+
+        {% if product.image %}
+            <img src="{{ product.image.url }}">
+        {% elif product.images.first %}
+            <img src="{{ product.images.first.image.url }}">
+        {% else %}
+            <img src="{% static 'default_product.jpg' %}">
+        {% endif %}
+
+        <div class="product-info">
+            <h4>{{ product.name }}</h4>
+
+            <div class="price">
+                {% if product.discounted_price %}
+                    <span class="old-price">₹{{ product.price }}</span>
+                    <span class="new-price">₹{{ product.discounted_price }}</span>
+                {% else %}
+                    <span class="new-price">₹{{ product.price }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+    </a>
+
+</div>
+{% empty %}
+<p style="padding:15px;">No products available.</p>
+{% endfor %}
+
+</div>
+
+
+<script>
+function toggleWishlist(event, productId){
+    event.preventDefault();
+    event.stopPropagation();
+
+    fetch(`/add-to-wishlist/${productId}/`)
+    .then(response => response.json())
+    .then(data => {
+        const heart = document.getElementById(`heart-${productId}`);
+        heart.style.color = data.status === "added" ? "red" : "black";
+    });
+}
+</script>
+
+{% endblock %}

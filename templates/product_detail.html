@@ -239,7 +239,7 @@
     }
   }
 </style>
-
+<div style="margin-top:70px;"></div>
 <div class="page-wrap">
 
   <!-- IMAGE SCROLL -->
@@ -261,7 +261,7 @@
     {% endfor %}
   </div> -->
   <!-- IMAGE SCROLL -->
-<div class="image-scroll">
+<!-- <div class="image-scroll">
 
   {% if product.images.all %}
     {% for img in product.images.all %}
@@ -282,7 +282,120 @@
       </div>
   {% endif %}
 
+</div> -->
+
+<div class="image-scroll">
+
+  {% if product.images.all %}
+    {% for img in product.images.all %}
+      <div class="image-item" style="position:relative;">
+<a href="javascript:void(0);"
+   onclick="toggleWishlist({{ product.id }})"
+   style="
+     position:absolute;
+     top:12px;
+     right:12px;
+     z-index:10;
+     background:white;
+     border-radius:50%;
+     width:42px;
+     height:42px;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     box-shadow:0 6px 16px rgba(0,0,0,.2);
+     text-decoration:none;
+     transition:.25s;
+   ">
+
+   <span id="wishlist-heart"
+         style="font-size:22px;
+         color:{% if is_wishlisted %}red{% else %}black{% endif %};">
+         ♥
+   </span>
+
+</a>
+
+
+        <img src="{{ img.image.url }}" class="product-img">
+
+      </div>
+    {% endfor %}
+
+  {% elif product.image %}
+      <div class="image-item" style="position:relative;">
+<a href="javascript:void(0);"
+   onclick="toggleWishlist({{ product.id }})"
+   style="
+     position:absolute;
+     top:12px;
+     right:12px;
+     z-index:10;
+     background:white;
+     border-radius:50%;
+     width:42px;
+     height:42px;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     box-shadow:0 6px 16px rgba(0,0,0,.2);
+     text-decoration:none;
+     transition:.25s;
+   ">
+
+   <span id="wishlist-heart"
+         style="font-size:22px;
+         color:{% if is_wishlisted %}red{% else %}black{% endif %};">
+         ♥
+   </span>
+
+</a>
+
+
+        <img src="{{ product.image.url }}" class="product-img">
+
+      </div>
+
+  {% else %}
+      <div class="image-item" style="position:relative;">
+
+        <!-- ❤️ WISHLIST BUTTON -->
+       <a href="javascript:void(0);"
+   onclick="toggleWishlist({{ product.id }})"
+   style="
+     position:absolute;
+     top:12px;
+     right:12px;
+     z-index:10;
+     background:white;
+     border-radius:50%;
+     width:42px;
+     height:42px;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     box-shadow:0 6px 16px rgba(0,0,0,.2);
+     text-decoration:none;
+     transition:.25s;
+   ">
+
+   <span id="wishlist-heart"
+         style="font-size:22px;
+         color:{% if is_wishlisted %}red{% else %}black{% endif %};">
+         ♥
+   </span>
+
+</a>
+
+
+        <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png"
+             class="product-img">
+
+      </div>
+  {% endif %}
+
 </div>
+
 
   <!-- PRODUCT INFO -->
   <div>
@@ -469,6 +582,31 @@
       showSizeError();
     }
   });
+
+  
+function toggleWishlist(productId) {
+
+  if (!confirm("Do you want to update wishlist?")) {
+    return;
+  }
+
+  fetch(`/add-to-wishlist/${productId}/`)
+    .then(response => response.json())
+    .then(data => {
+
+      const heart = document.getElementById("wishlist-heart");
+
+      if (data.status === "added") {
+        heart.style.color = "red";
+        alert("Added to wishlist ❤️");
+      } else {
+        heart.style.color = "black";
+        alert("Removed from wishlist 🖤");
+      }
+
+    });
+}
+
 </script>
 
 

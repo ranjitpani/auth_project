@@ -4,7 +4,7 @@ from .models import (
     CustomUser, Country, State, District, Block,Village,
     Store, Product, ProductStock, ProductImage,
     Category, StoreCategory,
-    Order, OrderItem, ReturnRequest, RefundRequest, ExchangeRequest     # ✅ ADD
+    Order, OrderItem, ReturnRequest, RefundRequest, ExchangeRequest,SubCategory    # ✅ ADD
     
 )
 import nested_admin
@@ -57,7 +57,7 @@ admin.site.register(State)
 admin.site.register(District)
 admin.site.register(Block)
 admin.site.register(Village)
-
+admin.site.register(SubCategory)
 # ================== Store ==================
 class StoreAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'country', 'state', 'district', 'block','village')
@@ -83,16 +83,17 @@ class ProductStockInline(nested_admin.NestedTabularInline):
 # ---------------- Product Admin ----------------
 @admin.register(Product)
 class ProductAdmin(nested_admin.NestedModelAdmin):
+    
     list_display = (
-        'name', 'store', 'category',
+        'name', 'store', 'category','subcategory','is_latest',
         'price', 'discounted_price', 'is_available','delivery_charge','rating','gst_rate','gst_number'
     )
-    list_filter = ('store', 'category', 'is_available','gst_rate')
+    list_filter = ('store', 'category','subcategory','is_latest', 'is_available','gst_rate')
     search_fields = ('name','gst_number')
     inlines = [ProductStockInline, ProductImageInline, ]
 
     fieldsets = (
-        ('Basic Info', {'fields': ('name','store','category','is_available')}),
+        ('Basic Info', {'fields': ('name','store','category','subcategory','is_available','is_latest',)}),
         ('Pricing', {'fields': ('price','discounted_price','delivery_charge')}),
         ('GST Details', {'fields': ('gst_rate','gst_number')}),
         ('Rating', {'fields': ('rating',)}),
@@ -107,7 +108,8 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
 # ================== Category ==================
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name','store_category','icon')
+    list_filter = ('store_category',)
     search_fields = ('name',)
 
 @admin.register(StoreCategory)
@@ -251,3 +253,12 @@ class ExchangeRequestAdmin(OrderItemRequestBaseAdmin):
         qs = super().get_queryset(request)
         return qs.filter(exchange_requested=True)
     
+from django.contrib import admin
+from .models import Offer, Product
+
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ('title', 'discount_percentage', 'start_date', 'end_date', 'is_active')
+    filter_horizontal = ('products',)  # 🔹 Makes multi-select easier in admin
+
+admin.site.register(Offer, OfferAdmin)
+

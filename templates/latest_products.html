@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Latest Products{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* ===== Page Title ===== */
+
+.latest-title{
+    text-align:center;
+    font-size:28px;
+    font-weight:700;
+    margin:20px 0;
+    background:linear-gradient(45deg,#007bff,#00c6ff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* ===== Product Grid ===== */
+
+.product-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:25px;
+    padding:20px;
+    max-width:1000px;
+    margin:auto;
+}
+
+/* ===== Card ===== */
+
+.product-card{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(12px);
+    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+    transition:all .4s ease;
+    transform-style:preserve-3d;
+    animation:fadeUp .6s ease forwards;
+    opacity:0;
+}
+
+/* Hover 3D effect */
+.product-card:hover{
+    transform:translateY(-12px) rotateX(6deg) rotateY(6deg);
+    box-shadow:0 15px 40px rgba(0,0,0,0.2);
+}
+
+/* Image */
+.product-card img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+    transition:transform .4s ease;
+}
+
+.product-card:hover img{
+    transform:scale(1.08);
+}
+
+/* Info Section */
+.product-info{
+    padding:15px;
+    text-align:center;
+    background:white;
+}
+
+/* Product Name */
+.product-info h4{
+    font-size:16px;
+    font-weight:600;
+    margin-bottom:8px;
+    color:#333;
+}
+
+/* Price */
+.new-price{
+    font-size:18px;
+    font-weight:bold;
+    color:#007bff;
+}
+
+/* Animation */
+@keyframes fadeUp{
+    from{
+        transform:translateY(40px);
+        opacity:0;
+    }
+    to{
+        transform:translateY(0);
+        opacity:1;
+    }
+}
+
+/* Responsive */
+@media(max-width:768px){
+    .product-card img{
+        height:170px;
+    }
+}
+
+</style>
+
+<div style="margin-top:80px;"></div>
+
+<h2 class="latest-title">✨ Latest Products</h2>
+
+<div class="product-grid">
+
+{% for product in products %}
+<div class="product-card">
+
+    <a href="{% url 'product_detail' product.id %}" 
+       style="text-decoration:none;color:inherit;">
+
+        {% if product.image %}
+            <img src="{{ product.image.url }}">
+        {% elif product.images.first %}
+            <img src="{{ product.images.first.image.url }}">
+        {% else %}
+            <img src="{% static 'default_product.jpg' %}">
+        {% endif %}
+
+        <div class="product-info">
+            <h4>{{ product.name }}</h4>
+            <div class="price-row">
+                <span class="new-price">₹{{ product.price }}</span>
+            </div>
+        </div>
+
+    </a>
+
+</div>
+{% endfor %}
+
+</div>
+
+{% endblock %}

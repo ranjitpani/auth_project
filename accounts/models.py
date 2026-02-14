@@ -124,10 +124,29 @@ class Store(models.Model):
 # Category Model (for Products)
 # ---------------------------
 class Category(models.Model):
+    store_category = models.ForeignKey(
+        StoreCategory,
+        on_delete=models.CASCADE,
+        related_name='categories'
+    )
     name = models.CharField(max_length=100)
+    icon = CloudinaryField('icon', blank=True, null=True)
+    icon_url = models.URLField(null=True, blank=True) 
     def __str__(self):
         return self.name
+
+class SubCategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    name = models.CharField(max_length=100)
+    icon = CloudinaryField('icon', blank=True, null=True)
+    icon_url = models.URLField(null=True, blank=True) 
+    def __str__(self):
+        return f"{self.category.name} - {self.name}"
+
+
 from decimal import Decimal
+from smart_selects.db_fields import ChainedForeignKey
+
 # ---------------------------
 # Product Model
 # ---------------------------
@@ -137,19 +156,51 @@ from decimal import Decimal
 class Product(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=200)
-    category = models.ForeignKey(
-        'Category',  # Link to Category model
+    # category = models.ForeignKey(
+    #     'Category',  # Link to Category model
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='products'
+    # )
+    # subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, null=True, blank=True)
+    # rating = models.DecimalField(
+    #     max_digits=2,
+    #     decimal_places=1,
+    #     default=0,
+    #     help_text="Rating out of 5 (eg: 4.5)"
+    # )
+    
+    category = ChainedForeignKey(
+        Category,
+        chained_field="store",
+        chained_model_field="store_category__stores",
+        show_all=False,
+        auto_choose=True,
+        sort=True,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    subcategory = ChainedForeignKey(
+        SubCategory,
+        chained_field="category",
+        chained_model_field="category",
+        show_all=False,
+        auto_choose=True,
+        sort=True,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='products'
-    )
+        
+    ) 
     rating = models.DecimalField(
         max_digits=2,
         decimal_places=1,
         default=0,
         help_text="Rating out of 5 (eg: 4.5)"
-    )
+     )
     gst_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -168,6 +219,8 @@ class Product(models.Model):
     delivery_charge = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     description = models.TextField(blank=True, null=True)
     is_available = models.BooleanField(default=True)
+    is_latest = models.BooleanField(default=False) 
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def discount_percentage(self):
         if self.discounted_price and self.price:
@@ -549,3 +602,53 @@ class PasswordResetOTP(models.Model):
     def __str__(self):
         return f"{self.user} - {self.otp}"
 
+from django.conf import settings
+from django.db import models
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    product = models.ForeignKey(
+        'accounts.Product',   # ✅ CORRECT FOR YOU
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+
+    def __str__(self):
+        return f"{self.user} - {self.product.name}"
+from django.conf import settings
+
+class SearchHistory(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    query = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.query
+from django.db import models
+
+class Offer(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='offers/', blank=True, null=True)
+    discount_percentage = models.IntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+
+    # 🔹 Related products
+    products = models.ManyToManyField('Product', blank=True)
+
+    class Meta:
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return f"{self.title} - {self.discount_percentage}%"
