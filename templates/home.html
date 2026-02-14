@@ -742,10 +742,12 @@
 
     <span>{{ category }}</span>
 
-    <a href="{% url 'product_category_page' products.0.category.id %}" 
+    {% if products|length > 0 %}
+<a href="{% url 'product_category_page' products.0.category.id %}"
        style="font-size:13px; color:#007bff;">
         View All
     </a>
+    {% endif %}
 
 </div>
 
