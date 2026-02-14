@@ -671,7 +671,7 @@
     ">
         <span id="latest-heart-{{ product.id }}" 
               style="font-size:18px;
-              color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};">
+              color:red">
             ♥
         </span>
     </div>
@@ -699,10 +699,12 @@
 
 
                 {% if product.image %}
-                    <img src="{{ product.image.url }}">
-                {% else %}
-                    <img src="{% static 'default_product.jpg' %}">
-                {% endif %}
+            <img src="{{ product.image.url }}">
+        {% elif product.images.first %}
+            <img src="{{ product.images.first.image.url }}">
+        {% else %}
+            <img src="{% static 'default_product.jpg' %}">
+        {% endif %}
 
                 <div class="latest-info">
                     <h4>{{ product.name }}</h4>
@@ -769,7 +771,7 @@
      ">
 
             <span id="heart-{{ product.id }}" style="font-size:18px;
-      color:{% if product.id in wishlist_ids %}red{% else %}black{% endif %};">
+      color:red">
                 ♥
             </span>
 
