@@ -638,7 +638,7 @@ from django.db import models
 class Offer(models.Model):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='offers/', blank=True, null=True)
+    image = CloudinaryField('image')
     discount_percentage = models.IntegerField()
     start_date = models.DateField()
     end_date = models.DateField()

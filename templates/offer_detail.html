@@ -130,9 +130,11 @@
     <div class="offer-banner">
         {% if offer.image %}
             <img src="{{ offer.image.url }}">
-        {% else %}
+            {% elif product.images.first %}
+            <img src="{{ offer.images.first.image.url }}">
+            {% else %}
             <img src="{% static 'default_product.jpg' %}">
-        {% endif %}
+            {% endif %}
 
         <div class="offer-overlay">
             <h2>{{ offer.title }} - {{ offer.discount_percentage }}% OFF</h2>
