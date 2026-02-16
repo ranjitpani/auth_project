@@ -35,11 +35,12 @@ class CustomUser(AbstractUser):
     village = models.ForeignKey('Village', on_delete=models.SET_NULL, null=True, blank=True)
     is_store_owner = models.BooleanField(default=False)
     is_delivery_boy = models.BooleanField(default=False)
+    is_bus_partner = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-
+    
     objects = CustomUserManager()
 
     def __str__(self):
@@ -373,13 +374,30 @@ class Order(models.Model):
     on_delete=models.SET_NULL,
     related_name="delivery_orders"
 )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    bus_partner = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name="bus_orders"
+)
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    bus = models.ForeignKey(
+        'Bus',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='orders'
+    )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-
+    bus_name = models.CharField(max_length=100, null=True, blank=True)
+    bus_number_plate = models.CharField(max_length=30, null=True, blank=True)
+    bus_mobile = models.CharField(max_length=20, null=True, blank=True)
+    delivery_block = models.CharField(max_length=100, blank=True, null=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
@@ -387,18 +405,40 @@ class Order(models.Model):
 
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-
+    
     delivery_name = models.CharField(max_length=200, blank=True, null=True)
     delivery_phone = models.CharField(max_length=20, blank=True, null=True)
     delivery_address = models.TextField(blank=True, null=True)
     delivery_city = models.CharField(max_length=100, blank=True, null=True)
+    delivery_state = models.CharField(max_length=100, blank=True, null=True)
+    delivery_district = models.CharField(max_length=100, blank=True, null=True)
+    delivery_block = models.CharField(max_length=100, blank=True, null=True)
     delivery_postal_code = models.CharField(max_length=10, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+    # If delivery fields are empty, try to populate them
+        if not self.delivery_state:
+            try:
+                # First try UserAddress (default)
+                user_address = self.user.useraddress_set.filter(is_default=True).first()
+                if user_address:
+                    self.delivery_state = user_address.state or ''
+                    self.delivery_district = user_address.district or ''
+                    self.delivery_block = user_address.block or ''
+                else:
+                    # Fallback to user's own profile info
+                    self.delivery_state = self.user.state.name if self.user.state else ''
+                    self.delivery_district = self.user.district.name if self.user.district else ''
+                    self.delivery_block = self.user.block.name if self.user.block else ''
+            except Exception:
+                self.delivery_state = self.delivery_district = self.delivery_block = ''
+
+        # Generate unique order ID if not present
         if not self.order_uid:
             self.order_uid = self.generate_order_uid()
+
         super().save(*args, **kwargs)
 
     def generate_order_uid(self):
@@ -652,3 +692,38 @@ class Offer(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.discount_percentage}%"
+    
+from django.db import models
+
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.subject}"
+
+
+
+class Bus(models.Model):
+    partner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="buses"
+    )
+    bus_name = models.CharField(max_length=100)
+    number_plate = models.CharField(max_length=30)
+    mobile_number = models.CharField(max_length=20)
+
+    route_district = models.CharField(max_length=100)
+    route_block = models.CharField(max_length=100)
+
+    arrival_time = models.TimeField()
+
+    def __str__(self):
+        return self.bus_name
+
+

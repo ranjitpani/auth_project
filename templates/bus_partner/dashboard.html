@@ -1,0 +1,203 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-dark: #080a12;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --accent-blue: #00d2ff;
+        --accent-purple: #9d50bb;
+        --text-white: #ffffff;
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+        background: var(--bg-dark);
+        background-image: 
+            radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(157, 80, 187, 0.1) 0%, transparent 40%);
+        font-family: 'Outfit', sans-serif;
+        color: var(--text-white);
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+    }
+
+    .dashboard-title {
+        text-align: left;
+        font-size: 26px;
+        font-weight: 700;
+        margin: 10px 0 30px 5px;
+        background: linear-gradient(to right, #fff, var(--accent-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Stats Grid */
+    .top-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .notify-box {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 20px;
+        text-align: center;
+        transition: 0.3s;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    .notify-box h3 {
+        font-size: 32px;
+        margin: 0;
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .notify-box p {
+        font-size: 13px;
+        color: #94a3b8;
+        margin: 5px 0 15px 0;
+    }
+
+    .notify-box a {
+        display: block;
+        text-decoration: none;
+        color: white;
+        background: rgba(255,255,255,0.1);
+        padding: 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--glass-border);
+    }
+
+    /* Bus List Section */
+    .section-title {
+        font-size: 18px;
+        color: #94a3b8;
+        margin: 20px 0 15px 5px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .bus-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .bus-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        padding: 20px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+        border: 1px solid var(--glass-border);
+    }
+
+    .bus-card h4 {
+        margin: 0;
+        font-size: 18px;
+        color: var(--accent-blue);
+    }
+
+    .bus-card p {
+        margin: 3px 0 0 0;
+        font-size: 14px;
+    }
+
+    .bus-card a {
+        background: var(--accent-blue);
+        color: #080a12;
+        padding: 8px 15px;
+    }
+
+    /* Big Order History Card */
+    .order-history-box {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, rgba(157, 80, 187, 0.2), rgba(0, 210, 255, 0.1));
+    }
+
+    .history-content { text-align: left; }
+
+    /* Action Buttons */
+    .logout-btn {
+        display: block;
+        text-align: center;
+        margin-top: 40px;
+        padding: 15px;
+        color: #ff4b5c;
+        text-decoration: none;
+        font-weight: 700;
+        border: 1px solid rgba(255, 75, 92, 0.2);
+        border-radius: 18px;
+        transition: 0.3s;
+    }
+
+    .logout-btn:hover { background: rgba(255, 75, 92, 0.1); }
+
+    /* Animations */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+        .top-bar { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+<h2 class="dashboard-title">Bus Partner <br>Dashboard</h2>
+
+<div class="top-bar">
+    <div class="notify-box">
+        <h3>{{ orders.count }}</h3>
+        <p>Assigned Orders</p>
+        <a href="{% url 'bus_orders' %}">View List</a>
+    </div>
+
+    <div class="notify-box">
+        <h3 style="color: #00ff88;">+</h3>
+        <p>Register Bus</p>
+        <a href="{% url 'add_bus' %}">Add Now</a>
+    </div>
+</div>
+
+<h3 class="section-title">Your Fleet</h3>
+
+<div class="bus-list">
+    {% for bus in buses %}
+        <div class="notify-box bus-card">
+            <div>
+                <h4>{{ bus.bus_name }}</h4>
+                <p>{{ bus.number_plate }}</p>
+            </div>
+            <a href="{% url 'bus_order_history' bus.id %}">History</a>
+        </div>
+    {% empty %}
+        <p class="no-bus">No bus registered yet.</p>
+    {% endfor %}
+</div>
+
+<div class="notify-box order-history-box">
+    <div class="history-content">
+        <h3 style="font-size: 24px;">📜 History</h3>
+        <p style="margin: 0;">Full Order Records</p>
+    </div>
+    <a href="{% url 'bus_partner_order_history' %}" style="margin:0; width: auto; padding: 10px 20px;">Open</a>
+</div>
+
+<a href="{% url 'bus_logout' %}" class="logout-btn">Log Out Account</a>

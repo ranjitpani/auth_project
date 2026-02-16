@@ -10,7 +10,32 @@
 body{margin:0;background:#eef2ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;}
 .form-box{padding:20px;background:#fff;min-height:100vh;}
 @media(min-width:768px){.form-box{max-width:420px;margin:30px auto;border-radius:18px;box-shadow:0 15px 35px rgba(0,0,0,.1);}}
-input,textarea{width:100%;padding:16px;margin-bottom:14px;border-radius:14px;border:1px solid #e5e7eb;background:#f9fafb;font-size:15px;}
+
+.input-group{
+  position:relative;
+  margin-bottom:14px;
+}
+.input-group i{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#64748b;
+  font-size:16px;
+}
+.input-group input,
+.input-group textarea{
+  width:100%;
+  padding:16px 16px 16px 44px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#f9fafb;
+  font-size:15px;
+}
+.input-group textarea{
+  height:100px;
+  padding-top:16px;
+}
 .row{display:flex;gap:10px}.row input{flex:1}
 .btn{width:100%;padding:16px;border:none;border-radius:18px;font-size:16px;font-weight:800;}
 .btn-primary{background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;}
@@ -21,6 +46,8 @@ input,textarea{width:100%;padding:16px;margin-bottom:14px;border-radius:14px;bor
 .search-wrap input{flex:1}
 .search-wrap button{padding:0 18px;border:none;border-radius:14px;background:#2563eb;color:#fff;font-weight:700;}
 </style>
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
@@ -28,18 +55,57 @@ input,textarea{width:100%;padding:16px;margin-bottom:14px;border-radius:14px;bor
 {% include "checkout/steps.html" with step=1 %}
 <form method="post" action="{% url 'save_address' %}" class="form-box">
 {% csrf_token %}
-<input name="name" placeholder="Full Name" required>
-<input name="mobile" placeholder="Mobile Number" required maxlength="10">
-<input name="alt_mobile" placeholder="Alternate Mobile">
-<input name="pincode" id="pincode" placeholder="Pincode" required>
-<div class="row">
-  <input name="state" id="state" placeholder="State">
-  <input name="district" id="district" placeholder="District">
+<div class="input-group">
+  <i class="fa fa-user"></i>
+  <input name="name" placeholder="Full Name" required>
 </div>
-<input name="block" id="block" placeholder="Block">
-<input name="village" id="village" placeholder="Village">
-<input name="room_no" placeholder="House / Room No">
-<textarea name="address" id="address" placeholder="Street / Landmark" required></textarea>
+
+<div class="input-group">
+  <i class="fa fa-phone"></i>
+  <input name="mobile" placeholder="Mobile Number" required maxlength="10">
+</div>
+
+<div class="input-group">
+  <i class="fa fa-phone-volume"></i>
+  <input name="alt_mobile" placeholder="Alternate Mobile">
+</div>
+
+<div class="input-group">
+  <i class="fa fa-location-dot"></i>
+  <input name="pincode" id="pincode" placeholder="Pincode" required>
+</div>
+
+<div class="row">
+  <div class="input-group">
+    <i class="fa fa-map"></i>
+    <input name="state" id="state" placeholder="State">
+  </div>
+  <div class="input-group">
+    <i class="fa fa-map-pin"></i>
+    <input name="district" id="district" placeholder="District">
+  </div>
+</div>
+
+<div class="input-group">
+  <i class="fa fa-city"></i>
+  <input name="block" id="block" placeholder="Block">
+</div>
+
+<div class="input-group">
+  <i class="fa fa-tree"></i>
+  <input name="village" id="village" placeholder="Village">
+</div>
+
+<div class="input-group">
+  <i class="fa fa-home"></i>
+  <input name="room_no" placeholder="House / Room No">
+</div>
+
+<div class="input-group">
+  <i class="fa fa-road"></i>
+  <textarea name="address" id="address" placeholder="Street / Landmark" required></textarea>
+</div>
+
 <input type="hidden" name="latitude" id="lat">
 <input type="hidden" name="longitude" id="lng">
 <p class="note">🔍 Search / tap map / current location</p>
@@ -124,12 +190,23 @@ function useMyLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
+
     map.setView([lat,lng],16);
     marker.setLatLng([lat,lng]);
     setLatLng(lat,lng);
-    reverseGeocode(lat,lng);
+
+    // Only fill final delivery address
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.display_name){
+            document.getElementById("address").value = d.display_name;
+        }
+    });
+
   });
 }
+
 
 /* REVERSE GEOCODE */
 
@@ -172,39 +249,27 @@ const state = document.getElementById("state");
 const district = document.getElementById("district");
 const block = document.getElementById("block");
 const village = document.getElementById("village");
-
 pincode.addEventListener("blur", ()=>{
     const pin = pincode.value.trim();
-    if(!pin) return;
+    if(!pin || pin.length < 6) return;
 
-    // Use Nominatim API to get details from pincode
-    fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pin}&country=India&format=json&addressdetails=1&limit=1`, {
-        headers: {"Accept": "application/json","User-Agent":"delivery-app/1.0"}
-    })
+    fetch(`https://api.postalpincode.in/pincode/${pin}`)
     .then(res=>res.json())
     .then(data=>{
-        if(!data.length) return;
+        if(data[0].Status !== "Success") return;
 
-        const addr = data[0].address;
+        const post = data[0].PostOffice[0];
 
-        state.value    = addr.state || "";
-        district.value = addr.state_district || addr.district || "";
-        block.value    = addr.county || addr.suburb || "";
-        village.value  = addr.village || addr.town || addr.city || "";
-
-        // Set marker on map
-        if(map && marker){
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
-            map.setView([lat,lng],16);
-            marker.setLatLng([lat,lng]);
-            setLatLng(lat,lng);
-        }
+        state.value    = post.State || "";
+        district.value = post.District || "";
+        block.value    = post.Block || "";
+        village.value  = post.Name || "";
     })
     .catch(err=>{
-        console.log("Error fetching pincode data:", err);
+        console.log("Pincode error:", err);
     });
 });
+
 </script>
 </body>
 </html>

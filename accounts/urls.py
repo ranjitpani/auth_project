@@ -10,7 +10,8 @@ from .views import (
     place_order, live_search, checkout_address, checkout_payment,
     checkout_summary, save_address, change_address, edit_address,
     cancel_order, order_detail, request_order_action, ajax_load_villages,
-    download_invoice, product_invoice,wishlist,add_to_wishlist,remove_from_wishlist,product_category_page,search_products,ajax_search,offer_detail,latest_products_page
+    download_invoice, product_invoice,wishlist,add_to_wishlist,remove_from_wishlist,product_category_page,search_products,ajax_search,offer_detail,latest_products_page,
+    about,shipping_policy,open_box_policy,return_policy,refund_policy,cancel_policy,terms,privacy,contact,faq
  # <-- added store owner views
 )
 from accounts.views import create_superuser
@@ -83,5 +84,16 @@ path('remove-from-wishlist/<int:item_id>/', remove_from_wishlist, name='remove_f
 
 path('offer/<int:offer_id>/', offer_detail, name='offer_detail'),
 path('latest-products/', latest_products_page, name='latest_products_page'),
+path("about/", about, name="about"),
+path("shipping-policy/", shipping_policy, name="shipping_policy"),
+path("open-box-delivery/", open_box_policy, name="open_box_policy"),
+path("return-policy/", return_policy, name="return_policy"),
+path("refund-policy/",refund_policy, name="refund_policy"),
+path("cancel-policy/", cancel_policy, name="cancel_policy"),
+path("terms-and-conditions/",terms, name="terms"),
+path("privacy-policy/",privacy, name="privacy"),
+path("contact/",contact, name="contact"),
+path("faq/",faq, name="faq"),
+
 
 ]

@@ -9,6 +9,8 @@ urlpatterns = [
     path("store-owner/", include("accounts.store_owner.urls")),
     path("delivery/", include("delivery.urls")),
     path('chaining/', include('smart_selects.urls')),
+    path("bus/", include("accounts.bus_partner.urls")),
+
 ]
 
 # Serve media files in development

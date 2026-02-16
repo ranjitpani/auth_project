@@ -1,0 +1,214 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg: #0b0f1a;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --accent: #60a5fa;
+        --border: rgba(255, 255, 255, 0.1);
+        --text-dim: #94a3b8;
+    }
+
+    body {
+        background: var(--bg);
+        background-image: radial-gradient(circle at top left, #1e293b, #0b0f1a);
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        margin: 0;
+        padding: 15px;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Header & Back Link */
+    .header {
+        margin-bottom: 25px;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(to right, #fff, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Filter Form Styling */
+    .filter-box {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-box input {
+        flex: 1;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--border);
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .filter-box button {
+        background: var(--accent);
+        color: #0b0f1a;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* Order Cards (Mobile Response) */
+    .order-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 20px;
+        margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .card-id {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent);
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .bus-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+    }
+
+    .bus-icon {
+        background: rgba(96, 165, 250, 0.2);
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 20px;
+    }
+
+    .bus-details b {
+        display: block;
+        font-size: 16px;
+    }
+
+    .bus-details span {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .meta-item b {
+        display: block;
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+    }
+
+    .meta-item span {
+        font-size: 13px;
+    }
+
+    .empty-msg {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-dim);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <a href="{% url 'bus_dashboard' %}" class="back-link">← Back to Dashboard</a>
+        <h2>Assigned History</h2>
+    </div>
+
+    <form method="get" class="filter-box">
+        <input type="date" name="date" value="{{ selected_date }}">
+        <button type="submit">Filter</button>
+    </form>
+
+    <div class="order-list">
+        {% for order in orders %}
+        <div class="order-card">
+            <span class="card-id">UID: {{ order.order_uid }}</span>
+            
+            <div class="bus-info">
+                <div class="bus-icon">🚌</div>
+                <div class="bus-details">
+                    <b>{% if order.bus %}{{ order.bus.bus_name }}{% else %}Not Assigned{% endif %}</b>
+                    <span>{% if order.bus %}{{ order.bus.number_plate }}{% else %}—{% endif %}</span>
+                </div>
+            </div>
+
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <b>Mobile</b>
+                    <span>{% if order.bus %}{{ order.bus.mobile_number }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="meta-item">
+                    <b>Arrival Time</b>
+                    <span>{% if order.bus %}{{ order.bus.arrival_time }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="meta-item">
+                    <b>District</b>
+                    <span>{% if order.bus %}{{ order.bus.route_district }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="meta-item">
+                    <b>Block</b>
+                    <span>{% if order.bus %}{{ order.bus.route_block }}{% else %}—{% endif %}</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-msg">
+            <p>📭 No orders assigned yet for this date.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>

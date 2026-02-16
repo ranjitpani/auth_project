@@ -242,47 +242,6 @@
 <div style="margin-top:70px;"></div>
 <div class="page-wrap">
 
-  <!-- IMAGE SCROLL -->
-  <!-- <div class="image-scroll">
-    {% for img in product.images.all %}
-    <div class="image-item">
-     {% if product.image %}
-    <img src="{{ product.image.url }}">
-{% elif product.images.first %}
-    <img src="{{ product.images.first.image.url }}">
-{% else %}
-    <img src="{% static 'default_product.jpg' %}">
-{% endif %}
-    </div>
-    {% empty %}
-    <div class="image-item">
-      <img src="{% static 'default_product.jpg' %}" class="product-img">
-    </div>
-    {% endfor %}
-  </div> -->
-  <!-- IMAGE SCROLL -->
-<!-- <div class="image-scroll">
-
-  {% if product.images.all %}
-    {% for img in product.images.all %}
-      <div class="image-item">
-        <img src="{{ img.image.url }}" class="product-img">
-      </div>
-    {% endfor %}
-
-  {% elif product.image %}
-      <div class="image-item">
-        <img src="{{ product.image.url }}" class="product-img">
-      </div>
-
-  {% else %}
-      <div class="image-item">
-        <img src="https://res.cloudinary.com/demo/image/upload/v1690000000/no-image.png"
-             class="product-img">
-      </div>
-  {% endif %}
-
-</div> -->
 
 <div class="image-scroll">
 

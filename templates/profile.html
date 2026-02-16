@@ -10,10 +10,9 @@
 }
 /* ===== CARD ===== */
 .profile-card{
-  background:#fff;
-  border-radius:18px;
+
   padding:18px;
-  box-shadow:0 8px 22px rgba(0,0,0,.08);
+
 }
 /* ===== HEADER ===== */
 .profile-header{
@@ -65,6 +64,56 @@
 .save-btn:active{
   transform:scale(.95);
 }
+/* ===== HELP SECTION ===== */
+.help-section{
+  margin-top:25px;
+}
+
+.help-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:14px;
+  padding-left:5px;
+  color:#333;
+}
+
+/* Support Items */
+.support-item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px;
+  margin-bottom:12px;
+  text-decoration:none;
+  color:#333;
+  font-weight:600;
+  font-size:14px;
+  transition:.25s;
+
+}
+
+.support-item:hover{
+  background:linear-gradient(135deg,#2874f0,#0059d6);
+  border-radius: 14px;
+  color:#fff;
+  transform:translateX(4px);
+}
+
+.support-item .icon{
+  font-size:18px;
+  min-width:24px;
+}
+
+/* MOBILE OPTIMIZATION */
+@media(max-width:480px){
+  .support-item{
+    font-size:13px;
+    padding:12px;
+  }
+}
+
+
+
 /* ===== LOGOUT ===== */
 .logout-btn{
   width:100%;
@@ -102,6 +151,64 @@
       <p>{{ request.user.username }}<br>{{ request.user.email }}</p>
     </div>
 
+ <!-- HELP & SUPPORT -->
+<div class="help-section">
+  <h3 class="help-title">💬 Help & Support</h3>
+
+  <a href="{% url 'about' %}" class="support-item">
+    <span class="icon">🏢</span>
+    <span>About Us</span>
+  </a>
+
+  <a href="{% url 'shipping_policy' %}" class="support-item">
+    <span class="icon">🚚</span>
+    <span>Delivery / Shipping Policy</span>
+  </a>
+
+  <a href="{% url 'open_box_policy' %}" class="support-item">
+    <span class="icon">📦</span>
+    <span>Open Box Delivery Rule</span>
+  </a>
+
+  <a href="{% url 'return_policy' %}" class="support-item">
+    <span class="icon">🔄</span>
+    <span>Return Policy</span>
+  </a>
+
+  <a href="{% url 'refund_policy' %}" class="support-item">
+    <span class="icon">💰</span>
+    <span>Refund Policy</span>
+  </a>
+
+  <a href="{% url 'cancel_policy' %}" class="support-item">
+    <span class="icon">❌</span>
+    <span>Cancellation Policy</span>
+  </a>
+
+  <a href="{% url 'terms' %}" class="support-item">
+    <span class="icon">📜</span>
+    <span>Terms & Conditions</span>
+  </a>
+
+  <a href="{% url 'privacy' %}" class="support-item">
+    <span class="icon">🔐</span>
+    <span>Privacy Policy</span>
+  </a>
+
+  <a href="{% url 'contact' %}" class="support-item">
+    <span class="icon">☎️</span>
+    <span>Contact Us</span>
+  </a>
+
+  <a href="{% url 'faq' %}" class="support-item">
+    <span class="icon">❓</span>
+    <span>FAQ</span>
+  </a>
+
+</div>
+
+
+
    
    
 
@@ -116,83 +223,6 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- <script>
-$("#id_country").change(function(){
-  $.get("{% url 'ajax_load_states' %}", {
-    country: $(this).val()
-  }, function(data){
-    $("#id_state").html(data);
-    $("#id_district").html('');
-    $("#id_block").html('');
-    $("#id_village").html('');
-  });
-});
 
-$("#id_state").change(function(){
-  $.get("{% url 'ajax_load_districts' %}", {
-    state: $(this).val()
-  }, function(data){
-    $("#id_district").html(data);
-    $("#id_block").html('');
-    $("#id_village").html('');
-  });
-});
-
-$("#id_district").change(function(){
-  $.get("{% url 'ajax_load_blocks' %}", {
-    district: $(this).val()
-  }, function(data){
-    $("#id_block").html(data);
-    $("#id_village").html('');
-  });
-});
-
-$("#id_block").change(function(){
-  $.get("{% url 'ajax_load_villages' %}", {
-    block: $(this).val()
-  }, function(data){
-    $("#id_village").html(data);
-  });
-});
-</script> -->
-<!-- <script>
-  $("#id_country").change(function () {
-  $.get("{% url 'ajax_load_states' %}", {
-    country: $(this).val()
-  }, function (data) {
-    $("#id_state").html(data);
-    $("#id_district").html('');
-    $("#id_block").html('');
-    $("#id_village").html('');
-  });
-});
-
-$("#id_state").change(function () {
-  $.get("{% url 'ajax_load_districts' %}", {
-    state: $(this).val()
-  }, function (data) {
-    $("#id_district").html(data);
-    $("#id_block").html('');
-    $("#id_village").html('');
-  });
-});
-
-$("#id_district").change(function () {
-  $.get("{% url 'ajax_load_blocks' %}", {
-    district: $(this).val()
-  }, function (data) {
-    $("#id_block").html(data);
-    $("#id_village").html('');
-  });
-});
-
-$("#id_block").change(function () {
-  $.get("{% url 'ajax_load_villages' %}", {
-    block: $(this).val()
-  }, function (data) {
-    $("#id_village").html(data);
-  });
-});
-</script> -->
 
 {% endblock %}

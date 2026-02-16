@@ -1,0 +1,126 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        --card-bg: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.15);
+    }
+
+    body {
+        background: #0f172a; /* Sleek dark theme */
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h2 {
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 25px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+    }
+
+    .orders-grid {
+        width: 100%;
+        max-width: 400px; /* Mobile width optimized */
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .order-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .order-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: #6366f1;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+    }
+
+    .order-info b {
+        font-size: 16px;
+        display: block;
+        color: #e2e8f0;
+        font-family: 'Courier New', Courier, monospace; /* For a tech/ID feel */
+        letter-spacing: 1px;
+    }
+
+    .order-info span {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    /* Premium View Button */
+    .view-link {
+        text-decoration: none;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        transition: 0.3s;
+    }
+
+    .view-link:hover {
+        box-shadow: 0 6px 15px rgba(168, 85, 247, 0.5);
+        transform: rotate(-2deg);
+    }
+
+    /* Empty State Styling */
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+        font-style: italic;
+    }
+
+    /* Entrance Animation */
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
+<h2>📦 Assigned Orders</h2>
+
+<div class="orders-grid">
+    {% for order in orders %}
+        <div class="order-card">
+            <div class="order-info">
+                <span>ORDER ID</span>
+                <b>{{ order.order_uid }}</b>
+            </div>
+            
+            <a href="{% url 'bus_order_detail' order.id %}" class="view-link">
+                View Details
+            </a>
+        </div>
+    {% empty %}
+        <div class="empty-state">
+            <p>No orders assigned yet.</p>
+        </div>
+    {% endfor %}
+</div>

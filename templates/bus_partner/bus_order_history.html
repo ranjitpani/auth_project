@@ -1,0 +1,148 @@
+<h2 class="title">Order History for {{ bus.bus_name }} ({{ bus.number_plate }})</h2>
+
+<a href="{% url 'bus_dashboard' %}" class="back-btn">← Back to Dashboard</a>
+
+<div class="table-container">
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>Order UID</th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Delivery State</th>
+                <th>Delivery District</th>
+                <th>Delivery Block</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.order_uid }}</td>
+                <td>{{ order.user.email }}</td>
+                <td class="status">{{ order.status }}</td>
+                <td>{{ order.delivery_state }}</td>
+                <td>{{ order.delivery_district }}</td>
+                <td>{{ order.delivery_block }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="no-orders">No orders assigned to this bus yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+/* Global Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(180deg, #eef4ff, #ffffff);
+    margin: 0;
+    padding: 20px;
+}
+
+/* Title */
+.title {
+    font-size: 1.8rem;
+    color: #1a73e8;
+    margin-bottom: 10px;
+    animation: fadeInDown 0.6s ease forwards;
+}
+
+/* Back button */
+.back-btn {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    background-color: #1a73e8;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s ease;
+}
+.back-btn:hover {
+    background-color: #155bb5;
+    transform: translateX(-5px);
+}
+
+/* Table container */
+.table-container {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Table styles */
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.order-table th, .order-table td {
+    text-align: left;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.order-table th {
+    background-color: #1a73e8;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.order-table tbody tr {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.order-table tbody tr:hover {
+    background-color: #f0f4ff;
+    transform: scale(1.02);
+}
+
+/* Status colors */
+.status {
+    font-weight: 600;
+}
+.status:contains('Delivered') { color: green; }
+.status:contains('Pending') { color: orange; }
+.status:contains('Cancelled') { color: red; }
+
+/* No orders row */
+.no-orders {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .title {
+        font-size: 1.4rem;
+    }
+    .back-btn {
+        padding: 6px 12px;
+    }
+    .order-table th, .order-table td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+    }
+}
+</style>

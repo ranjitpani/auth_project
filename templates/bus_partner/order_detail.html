@@ -1,0 +1,188 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #0f172a;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --accent: #10b981; /* Success Green */
+        --primary: #3b82f6; /* Action Blue */
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+        background: var(--bg-color);
+        background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+    }
+
+    .detail-card {
+        width: 100%;
+        max-width: 450px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 28px;
+        padding: 30px 25px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        animation: scaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    h2 {
+        font-size: 20px;
+        margin-top: 0;
+        color: var(--primary);
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 15px;
+        text-align: center;
+    }
+
+    .info-section {
+        margin: 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .info-box {
+        background: rgba(255,255,255,0.03);
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .info-box b {
+        display: block;
+        font-size: 11px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .info-box span {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .address-box {
+        grid-column: span 2;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 4px solid var(--primary);
+    }
+
+    /* Premium Form Styling */
+    form {
+        margin-top: 30px;
+        background: rgba(0,0,0,0.2);
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    label {
+        font-size: 14px;
+        color: #cbd5e1;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    select {
+        width: 100%;
+        height: 55px;
+        background: #1e293b;
+        color: white;
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        padding: 0 15px;
+        font-size: 15px;
+        outline: none;
+        appearance: none; /* Custom arrow look */
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+
+    button {
+        width: 100%;
+        height: 55px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    .error-msg {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 14px;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    @keyframes scaleUp {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
+
+<div class="detail-card">
+    <h2>Assigning Order: {{ order.order_uid }}</h2>
+
+    <div class="info-section">
+        <div class="info-box">
+            <b>District</b>
+            <span>{{ order.delivery_district|default:"—" }}</span>
+        </div>
+        <div class="info-box">
+            <b>Block</b>
+            <span>{{ order.delivery_block|default:"—" }}</span>
+        </div>
+        <div class="info-box">
+            <b>State</b>
+            <span>{{ order.delivery_state|default:"—" }}</span>
+        </div>
+        <div class="address-box">
+            <b>📍 Delivery Address</b>
+            <span>{{ order.delivery_address }}</span>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if buses %}
+            <label for="bus_id">🚍 Choose Available Bus</label>
+            <select name="bus_id" id="bus_id">
+                {% for bus in buses %}
+                    <option value="{{ bus.id }}">
+                        {{ bus.bus_name }} ({{ bus.number_plate }})
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Confirm Assignment</button>
+        {% else %}
+            <div class="error-msg">
+                ⚠️ No buses found for this district & block. Please add a bus first.
+            </div>
+        {% endif %}
+    </form>
+</div>

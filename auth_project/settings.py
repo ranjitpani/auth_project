@@ -29,8 +29,7 @@ INSTALLED_APPS = [
     'nested_admin',
     'delivery',
     'smart_selects',
-
-    
+        
     
 ]
 

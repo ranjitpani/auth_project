@@ -174,18 +174,42 @@ class OrderAdmin(admin.ModelAdmin):
         "payment_method",
         "status",
         "expected_delivery",
+        "bus_partner",
+        "delivery_state",
+        "delivery_district",
+        "delivery_block",
         "view_location",
         "created_at",
     )
-    list_filter = ("status", "payment_method","delivery_boy","return_type",)
+    list_filter = ("status", "payment_method","delivery_boy","delivery_state",
+        "delivery_district",
+        "delivery_block","bus_partner","return_type",)
     list_editable = ("status", "expected_delivery","delivery_boy","return_type",)
     search_fields = ("order_uid", "user__email","delivery_boy__email")
     inlines = [OrderItemInline]
     date_hierarchy = "created_at"
     readonly_fields = ("order_uid",)
+    def delivery_state(self, obj):
+    # show from Order first, else from user profile
+        return obj.delivery_state or (obj.user.state.name if obj.user.state else "—")
+
+    def delivery_district(self, obj):
+        return obj.delivery_district or (obj.user.district.name if obj.user.district else "—")
+
+    def delivery_block(self, obj):
+        return obj.delivery_block or (obj.user.block.name if obj.user.block else "—")
+
+    delivery_state.short_description = "State"
+    delivery_district.short_description = "District"
+    delivery_block.short_description = "Block"
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "delivery_boy":
             kwargs["queryset"] = CustomUser.objects.filter(is_delivery_boy=True)
+
+        if db_field.name == "bus_partner":   # ✅ ADD
+            kwargs["queryset"] = CustomUser.objects.filter(is_bus_partner=True)
+
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     def view_location(self, obj):
         if obj.latitude and obj.longitude:
@@ -207,6 +231,8 @@ class OrderAdmin(admin.ModelAdmin):
         # OTP only for normal delivery
             if obj.return_type == "normal":
                 obj.generate_otp()
+        if obj.bus_partner and obj.status == "pending":
+            obj.status = "assigned"        
 
         super().save_model(request, obj, form, change)
     
@@ -261,4 +287,14 @@ class OfferAdmin(admin.ModelAdmin):
     filter_horizontal = ('products',)  # 🔹 Makes multi-select easier in admin
 
 admin.site.register(Offer, OfferAdmin)
+
+from django.contrib import admin
+from .models import ContactMessage
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'created_at')
+    search_fields = ('name', 'email', 'subject')
+    readonly_fields = ('created_at',)
+
 

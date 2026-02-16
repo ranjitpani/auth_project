@@ -2043,3 +2043,80 @@ def offer_detail(request, offer_id):
 def latest_products_page(request):
     products = Product.objects.filter(is_latest=True).order_by('-created_at')
     return render(request, 'latest_products.html', {'products': products})
+
+def about(request):
+    return render(request, "policies/about.html")
+
+def shipping_policy(request):
+    return render(request, "policies/shipping.html")
+
+def open_box_policy(request):
+    return render(request, "policies/open_box.html")
+
+def return_policy(request):
+    return render(request, "policies/return.html")
+
+def refund_policy(request):
+    return render(request, "policies/refund.html")
+
+def cancel_policy(request):
+    return render(request, "policies/cancel.html")
+
+def terms(request):
+    return render(request, "policies/terms.html")
+
+def privacy(request):
+    return render(request, "policies/privacy.html")
+
+import requests
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import ContactMessage
+
+
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+
+        # Save to database
+        ContactMessage.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            subject=subject,
+            message=message
+        )
+
+        # Send email via Resend
+        requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": settings.DEFAULT_FROM_EMAIL,
+                "to": ["hello@mofycart.shop"],  # Admin email
+                "subject": f"New Contact Message - {subject}",
+                "html": f"""
+                <h3>New Contact Message</h3>
+                <p><strong>Name:</strong> {name}</p>
+                <p><strong>Email:</strong> {email}</p>
+                <p><strong>Phone:</strong> {phone}</p>
+                <p><strong>Message:</strong><br>{message}</p>
+                """,
+            },
+        )
+
+        messages.success(request, "Message sent successfully!")
+        return redirect("contact")
+
+    return render(request, "policies/contact.html")
+
+def faq(request):
+    return render(request, "policies/faq.html")
