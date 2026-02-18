@@ -211,13 +211,21 @@ from accounts.models import Bus, Order
 @bus_partner_required
 def bus_dashboard(request):
 
-    orders = Order.objects.filter(bus_partner=request.user)
+    pending_orders = Order.objects.filter(
+        bus_partner=request.user,
+        status="bus_assigned"   # important condition
+    )
 
     buses = Bus.objects.filter(partner=request.user)
+    success_count = Order.objects.filter(
+        bus_partner=request.user,
+        bus_assigned_successfully=True
+).count()
 
     return render(request, "bus_partner/dashboard.html", {
-        "orders": orders,
-        "buses": buses
+        "orders": pending_orders,
+        "buses": buses,
+        "success_count": success_count
     })
 
 
@@ -244,7 +252,7 @@ def add_bus(request):
 def bus_orders(request):
     orders = Order.objects.filter(
         bus_partner=request.user,
-        status="assigned"
+        status="bus_assigned"
     )
 
     return render(request, "bus_partner/bus_orders.html", {
@@ -284,6 +292,7 @@ def order_detail_bus(request, order_id):
         order.bus_number_plate = bus.number_plate
         order.bus_mobile = bus.mobile_number
         order.status = "shipped"
+        order.bus_assigned_successfully = True 
         order.save()
 
         return redirect("bus_orders")
@@ -328,3 +337,132 @@ def bus_partner_order_history(request):
         'selected_date': selected_date
     }
     return render(request, 'bus_partner/order_history.html', context)
+
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.dateparse import parse_date
+from accounts.models import Order
+from accounts.models import BankAccount
+
+def bus_partner_profile(request):
+
+    user = request.user
+    today = timezone.now().date()
+    week_ago = timezone.now() - timedelta(days=7)
+
+    total_assigned = Order.objects.filter(
+        bus_partner=user
+    ).count()
+
+    total_success = Order.objects.filter(
+        bus_partner=user,
+        bus_assigned_successfully=True
+    ).count()
+
+    today_success = Order.objects.filter(
+        bus_partner=user,
+        bus_assigned_successfully=True,
+        created_at__date=today
+    ).count()
+
+    weekly_success = Order.objects.filter(
+        bus_partner=user,
+        bus_assigned_successfully=True,
+        created_at__gte=week_ago
+    ).count()
+
+    # ✅ Single date filter
+    selected_date = request.GET.get("date")
+    date_success_orders = None
+
+    if selected_date:
+        date_obj = parse_date(selected_date)
+        if date_obj:
+            date_success_orders = Order.objects.filter(
+                bus_partner=user,
+                bus_assigned_successfully=True,
+                created_at__date=date_obj
+            ).count()
+
+    # ✅ Date range filter
+    start_date = request.GET.get("start")
+    end_date = request.GET.get("end")
+
+    range_success_count = None
+    range_total_count = None
+    bus_summary = None
+
+    if start_date and end_date:
+        start_obj = parse_date(start_date)
+        end_obj = parse_date(end_date)
+
+        if start_obj and end_obj:
+
+            range_orders = Order.objects.filter(
+                bus_partner=user,
+                created_at__date__range=(start_obj, end_obj)
+            )
+
+            range_total_count = range_orders.count()
+
+            success_orders = range_orders.filter(
+                bus_assigned_successfully=True
+            )
+
+            range_success_count = success_orders.count()
+
+            # ✅ BUS GROUPING LOGIC 🔥
+            bus_summary = {}
+
+            for order in success_orders:
+                if not order.bus:
+                    continue
+
+                bus_id = order.bus.id
+
+                if bus_id not in bus_summary:
+                    bus_summary[bus_id] = {
+                        "bus_name": order.bus.bus_name,
+                        "number_plate": order.bus.number_plate,
+                        "count": 0
+                    }
+
+                bus_summary[bus_id]["count"] += 1
+        # ✅ BANK ACCOUNT SAVE / UPDATE
+    if request.method == "POST":
+        account_holder = request.POST.get("account_holder")
+        bank_name = request.POST.get("bank_name")
+        account_number = request.POST.get("account_number")
+        ifsc = request.POST.get("ifsc")
+
+        if account_holder and bank_name and account_number and ifsc:
+            BankAccount.objects.update_or_create(
+                user=user,
+                defaults={
+                    "account_holder": account_holder,
+                    "bank_name": bank_name,
+                    "account_number": account_number,
+                    "ifsc": ifsc,
+                }
+            )
+            return redirect("bus_partner_profile")
+    saved_account = BankAccount.objects.filter(user=user).first()
+
+    return render(request, "bus_partner/profile.html", {
+        "total_assigned": total_assigned,
+        "total_success": total_success,
+        "today_success": today_success,
+        "weekly_success": weekly_success,
+
+        "date_success_orders": date_success_orders,
+        "selected_date": selected_date,
+
+        "range_success_count": range_success_count,
+        "range_total_count": range_total_count,
+        "bus_summary": bus_summary,
+
+        "start_date": start_date,
+        "end_date": end_date,
+        "saved_account": saved_account,
+
+    })

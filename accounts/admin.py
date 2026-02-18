@@ -224,18 +224,20 @@ class OrderAdmin(admin.ModelAdmin):
     view_location.short_description = "Customer Location"
 
     def save_model(self, request, obj, form, change):
-    # 🔁 RETURN / REFUND / EXCHANGE DELIVERY
-        if obj.delivery_boy and obj.status in ["pending", "delivered"]:
+
+    # ✅ Delivery Boy Assign
+        if obj.delivery_boy and obj.status == "pending":
             obj.status = "assigned"
 
-        # OTP only for normal delivery
             if obj.return_type == "normal":
                 obj.generate_otp()
+
+        # ✅ Bus Partner Assign (NEW LOGIC)
         if obj.bus_partner and obj.status == "pending":
-            obj.status = "assigned"        
+            obj.status = "bus_assigned"
 
         super().save_model(request, obj, form, change)
-    
+
 @admin.register(OrderItem)
 class OrderItemRequestAdmin(admin.ModelAdmin):
     list_display = (
@@ -298,3 +300,9 @@ class ContactMessageAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
+from .models import BankAccount
+
+@admin.register(BankAccount)
+class BankAccountAdmin(admin.ModelAdmin):
+    list_display = ("user", "account_holder", "bank_name", "account_number", "ifsc", "created_at")
+    search_fields = ("user__email", "account_holder", "account_number", "ifsc")

@@ -1,0 +1,245 @@
+<style>
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+    body {
+        background: radial-gradient(circle at top left, #1e293b, #0f172a);
+        font-family: 'Inter', sans-serif;
+        color: #f8fafc;
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+    }
+
+    .dashboard-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        text-align: center;
+        background: linear-gradient(to right, #38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+    }
+
+    /* GRID SYSTEM */
+    .top-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: auto;
+    }
+
+    /* PREMIUM GLASS CARDS */
+    .notify-box {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notify-box::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, #38bdf8, #818cf8);
+        opacity: 0.6;
+    }
+
+    .notify-box:hover {
+        transform: translateY(-8px);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .notify-box h3 {
+        font-size: 36px;
+        margin: 0;
+        font-weight: 700;
+        color: #38bdf8;
+    }
+
+    .notify-box p {
+        font-size: 15px;
+        margin-top: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+        color: #94a3b8;
+    }
+
+    /* FORMS & INPUTS */
+    form {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    input[type="date"], input[type="text"] {
+        background: rgba(15, 23, 42, 0.8);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 15px;
+        border-radius: 12px;
+        font-size: 14px;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    input:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    button {
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    button:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    }
+
+    /* BUS LIST ITEM */
+    .bus-item {
+        margin-top: 12px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 14px;
+        border-left: 4px solid #facc15;
+    }
+
+    /* BACK BUTTON */
+    .logout-btn {
+        display: inline-block;
+        margin: 40px auto;
+        padding: 12px 30px;
+        background: rgba(244, 63, 94, 0.1);
+        border: 1px solid #f43f5e;
+        border-radius: 50px;
+        text-decoration: none;
+        color: #f43f5e;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .logout-btn:hover {
+        background: #f43f5e;
+        color: white;
+    }
+
+    /* MOBILE OPTIMIZATION */
+    @media (max-width: 600px) {
+        body { padding: 15px; }
+        .dashboard-title { font-size: 26px; }
+        .top-bar { grid-template-columns: 1fr; } /* Stack cards on mobile */
+        .notify-box h3 { font-size: 28px; }
+    }
+</style>
+
+<h2 class="dashboard-title">Profile Analytics</h2>
+
+<div class="top-bar">
+    <div class="notify-box">
+        <h3>{{ total_assigned }}</h3>
+        <p>Total Assigned</p>
+    </div>
+
+    <div class="notify-box">
+        <h3>{{ total_success }}</h3>
+        <p>Total Success</p>
+    </div>
+
+    <div class="notify-box">
+        <h3>{{ today_success }}</h3>
+        <p>Today Success</p>
+    </div>
+
+    <div class="notify-box">
+        <h3>{{ weekly_success }}</h3>
+        <p>Last 7 Days</p>
+    </div>
+
+    <div class="notify-box">
+        <p style="margin-bottom: 10px;">Filter by Date</p>
+        <form method="get">
+            <input type="date" name="date" value="{{ selected_date }}">
+            <button type="submit">Check Date</button>
+        </form>
+        {% if date_success_orders != None %}
+            <h3 style="margin-top:15px;">{{ date_success_orders }}</h3>
+            <p>Orders Found</p>
+        {% endif %}
+    </div>
+
+    <div class="notify-box">
+        <p style="margin-bottom: 10px;">Date Range</p>
+        <form method="get">
+            <input type="date" name="start" value="{{ start_date }}">
+            <input type="date" name="end" value="{{ end_date }}">
+            <button type="submit">Apply Range</button>
+        </form>
+    </div>
+
+    {% if bus_summary %}
+    <div class="notify-box">
+        <h3>Bus Performance</h3>
+        <div style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+            {% for bus in bus_summary.values %}
+                <div class="bus-item">
+                    <strong style="color:#facc15;">{{ bus.bus_name }}</strong><br>
+                    <small style="opacity:0.7;">{{ bus.number_plate }}</small><br>
+                    <span style="color:#38bdf8; font-weight:bold;">✅ {{ bus.count }} Success</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="notify-box">
+        <h3>Bank Details</h3>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="account_holder" placeholder="Holder Name" required>
+            <input type="text" name="bank_name" placeholder="Bank Name" required>
+            <input type="text" name="account_number" placeholder="Account Number" required>
+            <input type="text" name="ifsc" placeholder="IFSC Code" required>
+            <button type="submit">Save Account</button>
+        </form>
+
+        {% if saved_account %}
+            <div class="bus-item" style="border-left-color: #10b981; margin-top: 20px;">
+                <strong>{{ saved_account.account_holder }}</strong><br>
+                <small>{{ saved_account.bank_name }}</small><br>
+                <small>Acc: {{ saved_account.masked_account }}</small>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="text-align: center;">
+    <a href="{% url 'bus_dashboard' %}" class="logout-btn">← Back to Dashboard</a>
+</div>

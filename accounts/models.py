@@ -327,11 +327,12 @@ class Order(models.Model):
         ("pending", "Pending"),
         ("packed", "Packed"),
         ("assigned", "Assigned"),
+        ("bus_assigned", "Bus Partner Assigned"),  
         ("accepted", "Accepted"),
         ("picked_up", "Picked Up"), 
         ("rejected", "Rejected"),
         ("out_for_delivery", "Out For Delivery"),
-        ("shipped", "Shipped"),
+        ("shipped", "Successfully Bus Assigned"),
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
         ("returned", "Returned"),
@@ -390,6 +391,7 @@ class Order(models.Model):
         on_delete=models.SET_NULL,
         related_name='orders'
     )
+    bus_assigned_successfully = models.BooleanField(default=False)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -726,4 +728,24 @@ class Bus(models.Model):
     def __str__(self):
         return self.bus_name
 
+class BankAccount(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="bank_account"
+    )
 
+    account_holder = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=100)
+    account_number = models.CharField(max_length=50)
+    ifsc = models.CharField(max_length=20)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def masked_account(self):
+        if len(self.account_number) > 4:
+            return "XXXXXX" + self.account_number[-4:]
+        return self.account_number
+
+    def __str__(self):
+        return f"{self.user.email} - {self.bank_name}"

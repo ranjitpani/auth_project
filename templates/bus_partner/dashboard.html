@@ -3,201 +3,258 @@
 
 <style>
     :root {
-        --bg-dark: #080a12;
-        --card-bg: rgba(255, 255, 255, 0.05);
-        --accent-blue: #00d2ff;
-        --accent-purple: #9d50bb;
-        --text-white: #ffffff;
-        --glass-border: rgba(255, 255, 255, 0.1);
+        --bg-dark: #05070a;
+        --card-bg: rgba(15, 20, 30, 0.7);
+        --accent-cyan: #00f2ff;
+        --accent-purple: #7000ff;
+        --text-dim: #94a3b8;
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --neon-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
     }
 
     body {
         background: var(--bg-dark);
         background-image: 
-            radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 90% 80%, rgba(157, 80, 187, 0.1) 0%, transparent 40%);
+            radial-gradient(circle at 0% 0%, rgba(112, 0, 255, 0.15) 0%, transparent 35%),
+            radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.1) 0%, transparent 35%);
         font-family: 'Outfit', sans-serif;
-        color: var(--text-white);
+        color: #ffffff;
         margin: 0;
-        padding: 20px;
+        padding: 15px;
         min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Floating Profile Button */
+    .header-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0 25px 0;
     }
 
     .dashboard-title {
-        text-align: left;
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 700;
-        margin: 10px 0 30px 5px;
-        background: linear-gradient(to right, #fff, var(--accent-blue));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    /* Stats Grid */
-    .top-bar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-bottom: 30px;
-    }
-
-    .notify-box {
-        background: var(--card-bg);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 24px;
-        padding: 20px;
-        text-align: center;
-        transition: 0.3s;
-        animation: slideUp 0.6s ease-out;
-    }
-
-    .notify-box h3 {
-        font-size: 32px;
+        line-height: 1.2;
         margin: 0;
-        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        background: linear-gradient(to right, #fff, var(--text-dim));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
-    .notify-box p {
-        font-size: 13px;
-        color: #94a3b8;
-        margin: 5px 0 15px 0;
-    }
-
-    .notify-box a {
-        display: block;
+    .profile-btn {
         text-decoration: none;
         color: white;
-        background: rgba(255,255,255,0.1);
-        padding: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 16px;
         border-radius: 12px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         border: 1px solid var(--glass-border);
+        backdrop-filter: blur(5px);
     }
 
-    /* Bus List Section */
+    /* Stats Grid - 2 Cards per row */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 15px;
+        position: relative;
+        overflow: hidden;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:active {
+        transform: scale(0.96);
+    }
+
+    .stat-card h3 {
+        font-size: 28px;
+        margin: 0;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-shadow: var(--neon-shadow);
+    }
+
+    .stat-card p {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+        margin: 5px 0 12px 0;
+    }
+
+    .btn-mini {
+        display: inline-block;
+        text-decoration: none;
+        color: var(--accent-cyan);
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(0, 242, 255, 0.1);
+        padding: 5px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 242, 255, 0.2);
+    }
+
+    /* Fleet Section */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-left: 5px;
+    }
+
     .section-title {
-        font-size: 18px;
-        color: #94a3b8;
-        margin: 20px 0 15px 5px;
+        font-size: 14px;
+        color: var(--text-dim);
         text-transform: uppercase;
         letter-spacing: 2px;
-    }
-
-    .bus-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
+        margin: 0;
     }
 
     .bus-card {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: left;
-        padding: 20px;
-        background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+        background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
         border: 1px solid var(--glass-border);
-    }
-
-    .bus-card h4 {
-        margin: 0;
-        font-size: 18px;
-        color: var(--accent-blue);
-    }
-
-    .bus-card p {
-        margin: 3px 0 0 0;
-        font-size: 14px;
-    }
-
-    .bus-card a {
-        background: var(--accent-blue);
-        color: #080a12;
-        padding: 8px 15px;
-    }
-
-    /* Big Order History Card */
-    .order-history-box {
-        margin-top: 30px;
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 12px;
         display: flex;
-        flex-direction: row;
-        align-items: center;
         justify-content: space-between;
-        background: linear-gradient(135deg, rgba(157, 80, 187, 0.2), rgba(0, 210, 255, 0.1));
+        align-items: center;
     }
 
-    .history-content { text-align: left; }
+    .bus-info h4 {
+        margin: 0;
+        font-size: 17px;
+        color: #fff;
+    }
 
-    /* Action Buttons */
+    .bus-info p {
+        margin: 4px 0 0 0;
+        font-size: 13px;
+        color: var(--accent-cyan);
+        opacity: 0.8;
+    }
+
+    .history-link {
+        text-decoration: none;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 10px;
+    }
+
+    /* History Banner */
+    .history-banner {
+        background: linear-gradient(90deg, var(--accent-purple), #4e00b3);
+        border-radius: 22px;
+        padding: 20px;
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 25px rgba(112, 0, 255, 0.3);
+    }
+
+    .history-banner h3 { margin: 0; font-size: 20px; }
+    .history-banner p { margin: 5px 0 0 0; font-size: 12px; opacity: 0.8; }
+
+    .open-btn {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 12px;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        backdrop-filter: blur(5px);
+    }
+
     .logout-btn {
         display: block;
         text-align: center;
-        margin-top: 40px;
-        padding: 15px;
+        margin-top: 30px;
+        padding: 16px;
         color: #ff4b5c;
         text-decoration: none;
+        font-size: 14px;
         font-weight: 700;
-        border: 1px solid rgba(255, 75, 92, 0.2);
         border-radius: 18px;
-        transition: 0.3s;
+        background: rgba(255, 75, 92, 0.05);
+        border: 1px solid rgba(255, 75, 92, 0.1);
     }
 
-    .logout-btn:hover { background: rgba(255, 75, 92, 0.1); }
-
-    /* Animations */
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 480px) {
-        .top-bar { grid-template-columns: 1fr 1fr; }
+    /* Mobile specific tweaks */
+    @media (max-width: 370px) {
+        .stat-card h3 { font-size: 22px; }
+        .dashboard-title { font-size: 20px; }
     }
 </style>
 
-<h2 class="dashboard-title">Bus Partner <br>Dashboard</h2>
+<div class="header-area">
+    <h2 class="dashboard-title">Bus Partner<br>Console</h2>
+    <a href="{% url 'bus_partner_profile' %}" class="profile-btn">👤 Profile</a>
+</div>
 
-<div class="top-bar">
-    <div class="notify-box">
+<div class="stats-grid">
+    <div class="stat-card">
+        <p>Assigned</p>
         <h3>{{ orders.count }}</h3>
-        <p>Assigned Orders</p>
-        <a href="{% url 'bus_orders' %}">View List</a>
+        <a href="{% url 'bus_orders' %}" class="btn-mini">Orders</a>
     </div>
 
-    <div class="notify-box">
-        <h3 style="color: #00ff88;">+</h3>
-        <p>Register Bus</p>
-        <a href="{% url 'add_bus' %}">Add Now</a>
+    <div class="stat-card" style="border-color: rgba(0, 255, 136, 0.2);">
+        <p>Successful</p>
+        <h3 style="color: #00ff88;">{{ success_count }}</h3>
+        <a href="{% url 'bus_partner_order_history' %}" class="btn-mini">Logs</a>
+    </div>
+
+    <div class="stat-card" style="grid-column: span 2; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <p style="margin-bottom: 5px;">Fleet Status</p>
+            <h3 style="font-size: 20px; color: #fff;">Register New Bus</h3>
+        </div>
+        <a href="{% url 'add_bus' %}" class="btn-mini" style="background: var(--accent-cyan); color: #000; padding: 10px 20px;">+ Add</a>
     </div>
 </div>
 
-<h3 class="section-title">Your Fleet</h3>
+<div class="section-header">
+    <h3 class="section-title">Your Active Fleet</h3>
+</div>
 
 <div class="bus-list">
     {% for bus in buses %}
-        <div class="notify-box bus-card">
-            <div>
+        <div class="bus-card">
+            <div class="bus-info">
                 <h4>{{ bus.bus_name }}</h4>
                 <p>{{ bus.number_plate }}</p>
             </div>
-            <a href="{% url 'bus_order_history' bus.id %}">History</a>
+            <a href="{% url 'bus_order_history' bus.id %}" class="history-link">History</a>
         </div>
     {% empty %}
-        <p class="no-bus">No bus registered yet.</p>
+        <div class="bus-card" style="justify-content: center; opacity: 0.5;">
+            <p style="margin: 0;">No buses registered.</p>
+        </div>
     {% endfor %}
 </div>
 
-<div class="notify-box order-history-box">
-    <div class="history-content">
-        <h3 style="font-size: 24px;">📜 History</h3>
-        <p style="margin: 0;">Full Order Records</p>
+<div class="history-banner">
+    <div>
+        <h3>📜 Archive</h3>
+        <p>Full record history</p>
     </div>
-    <a href="{% url 'bus_partner_order_history' %}" style="margin:0; width: auto; padding: 10px 20px;">Open</a>
+    <a href="{% url 'bus_partner_order_history' %}" class="open-btn">View All</a>
 </div>
 
-<a href="{% url 'bus_logout' %}" class="logout-btn">Log Out Account</a>
+<a href="{% url 'bus_logout' %}" class="logout-btn">Log Out Securely</a>
